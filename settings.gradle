@@ -1,0 +1,6 @@
+rootProject.name = 'canton-demo-etf'
+
+include 'canton-etf-common'
+include 'canton-etf-api'
+include 'canton-etf-iam'
+include 'canton-etf-fix'
