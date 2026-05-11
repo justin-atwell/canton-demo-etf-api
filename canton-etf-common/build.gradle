@@ -17,6 +17,8 @@ dependencies {
 
     // Logging
     api 'org.slf4j:slf4j-api:2.0.9'
+
+    api 'org.springframework.boot:spring-boot-starter:3.4.5'
 }
 
 tasks.register('damlCodegen', Exec) {
