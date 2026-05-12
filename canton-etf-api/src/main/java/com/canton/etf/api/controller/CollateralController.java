@@ -30,7 +30,7 @@ public class CollateralController {
         String partyId = partyResolver.resolveParty(authHeader);
         String accountId = collateralService.createAccount(partyId, request);
 
-        return ResponseEntity.ok(accountId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(accountId);
     }
 
     @PostMapping("/{accountId}/deposit")
