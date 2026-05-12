@@ -14,7 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
@@ -62,5 +62,49 @@ class EtfControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(content().string("SPY"));
+    }
+
+    @Test
+    @WithMockUser
+    void getEtf_validRequest_returns200() throws Exception {
+        when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
+        when(etfService.getEtf(eq("FundManager::abc123"), eq("SPY"))).thenReturn("SPY details");
+
+        mvc.perform(get("/etf/SPY")
+                        .header("Authorization", "Bearer test-token"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("SPY details"));
+    }
+
+    @Test
+    @WithMockUser
+    void createEtf_missingAuthHeader_returns4xx() throws Exception {
+        var request = new CreateEtfRequest(
+                "SPY",
+                "SPDR S&P 500",
+                "78462F103",
+                "Custodian::abc123",
+                "Compliance::abc123",
+                "Auditor::abc123"
+        );
+
+        when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
+        when(etfService.createEtf(eq("FundManager::abc123"), any())).thenReturn("SPY");
+
+        mvc.perform(post("/etf")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser
+    void suspendEtf_validRequest_returns204() throws Exception {
+        when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
+
+        mvc.perform(put("/etf/SPY/suspend")
+                .header("Authorization", "Bearer test-token")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
     }
 }
