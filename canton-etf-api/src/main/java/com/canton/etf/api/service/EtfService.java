@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+
+import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
 @Service
 public class EtfService {
@@ -42,13 +45,13 @@ public class EtfService {
 
         return request.ticker();
     }
-
     public Object getEtf(String partyId, String ticker) {
-        // Query implementation coming next
-        return null;
+        // TODO: query active ETFDefinition contracts from ledger
+        return Map.of("ticker", ticker, "status", "Active", "message", "Ledger query coming soon");
     }
 
     public void suspendEtf(String partyId, String ticker) {
-        // Exercise implementation coming next
+        // TODO: find ETFDefinition contract by ticker and exercise Suspend choice
+        log.info("Suspend requested for ticker {} by party {}", ticker, partyId);
     }
 }

@@ -15,7 +15,7 @@ import java.util.UUID;
 @Service
 public class LedgerCommandService {
 
-    private static final Logger log = LoggerFactory.getLogger(LedgerCommandService.class);
+    public static final Logger log = LoggerFactory.getLogger(LedgerCommandService.class);
 
     private final CommandServiceGrpc.CommandServiceBlockingStub commandService;
 
@@ -47,4 +47,5 @@ public class LedgerCommandService {
 
         return commandId;
     }
+
 }
