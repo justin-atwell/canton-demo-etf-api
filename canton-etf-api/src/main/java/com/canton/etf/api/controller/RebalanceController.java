@@ -1,6 +1,5 @@
 package com.canton.etf.api.controller;
 
-import com.canton.etf.api.dto.CreateEtfRequest;
 import com.canton.etf.api.dto.CreateRebalanceRequest;
 import com.canton.etf.api.service.RebalanceService;
 import com.canton.etf.common.security.CantonPartyResolver;
@@ -54,7 +53,9 @@ public class RebalanceController {
             @RequestHeader("Authorization") String authHeader,
             @PathVariable String ticker,
             @PathVariable String proposalId){
+        String partyId = cantonPartyResolver.resolveParty(authHeader);
 
+        rebalanceService.reject(partyId,ticker,proposalId);
         return ResponseEntity.ok(HttpStatus.OK);
     }
 
@@ -63,7 +64,9 @@ public class RebalanceController {
             @RequestHeader("Authorization") String authHeader,
             @PathVariable String ticker,
             @PathVariable String proposalId){
+        String partyId = cantonPartyResolver.resolveParty(authHeader);
 
+        rebalanceService.execute(partyId,ticker,proposalId);
         return ResponseEntity.ok(HttpStatus.OK);
     }
 }
