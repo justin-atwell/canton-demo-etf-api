@@ -1,5 +1,6 @@
 package com.canton.etf.iam.sync;
 
+import com.canton.etf.common.ledger.LedgerCommandService;
 import com.canton.etf.iam.ldap.LdapUser;
 import com.canton.etf.iam.ldap.LdapUserRepository;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,9 @@ public class LdapSyncServiceTest {
 
     @Mock
     private LdapUserRepository ldapUserRepository;
+
+    @Mock
+    private LedgerCommandService ledgerCommandService;
 
     @InjectMocks
     private LdapSyncService testObject;

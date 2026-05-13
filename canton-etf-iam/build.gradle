@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation project(':canton-etf-common')
+    implementation project(':canton-etf-common')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'

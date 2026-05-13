@@ -1,5 +1,6 @@
 package com.canton.etf.iam.sync;
 
+import com.canton.etf.common.ledger.LedgerCommandService;
 import com.canton.etf.iam.ldap.LdapUser;
 import com.canton.etf.iam.ldap.LdapUserRepository;
 import org.slf4j.Logger;
@@ -15,9 +16,13 @@ public class LdapSyncService {
     private static final Logger log = LoggerFactory.getLogger(LdapSyncService.class);
 
     private final LdapUserRepository ldapUserRepository;
+    private final LedgerCommandService ledgerCommandService;
 
-    public LdapSyncService(LdapUserRepository ldapUserRepository) {
+    public LdapSyncService(
+            LdapUserRepository ldapUserRepository,
+            LedgerCommandService ledgerCommandService) {
         this.ldapUserRepository = ldapUserRepository;
+        this.ledgerCommandService = ledgerCommandService;
     }
 
     @Scheduled(fixedDelayString = "${canton.ldap.sync.interval:30000}")
@@ -31,12 +36,8 @@ public class LdapSyncService {
         for (LdapUser user : ldapUsers) {
             List<String> roles = ldapUserRepository.findRolesForUser(user.uid());
             LdapUser userWithRoles = new LdapUser(
-                    user.dn(),
-                    user.uid(),
-                    user.displayName(),
-                    user.email(),
-                    roles
-            );
+                    user.dn(), user.uid(), user.displayName(),
+                    user.email(), roles);
             syncUser(userWithRoles);
         }
 
@@ -44,8 +45,12 @@ public class LdapSyncService {
     }
 
     private void syncUser(LdapUser user) {
-        // TODO: diff against ledger DirectoryEntry contracts
-        // For now just log
         log.info("Syncing user {} with roles {}", user.uid(), user.roles());
+
+        // TODO: query ledger for existing DirectoryEntry
+        // If not found: createDirectoryEntry + createRoleMemberships
+        // If found and roles changed: updateRoles + sync RoleMemberships
+        // If deactivated in LDAP: deactivate DirectoryEntry + revoke RoleMemberships
+        // Write AccessEvent for every change
     }
 }
