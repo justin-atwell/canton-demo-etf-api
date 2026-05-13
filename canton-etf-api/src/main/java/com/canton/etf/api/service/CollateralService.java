@@ -22,7 +22,7 @@ public class CollateralService {
         return "collateral-stub";
     }
 
-    public void deposit(String partyId, CollateralTransactionRequest request) {
+    public void deposit(String accountId, String partyId, CollateralTransactionRequest request) {
 
     }
 

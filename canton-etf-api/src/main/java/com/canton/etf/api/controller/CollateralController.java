@@ -40,7 +40,7 @@ public class CollateralController {
             @PathVariable String accountId) {
 
         String partyId = partyResolver.resolveParty(authHeader);
-        collateralService.deposit(partyId, request);
+        collateralService.deposit(accountId, partyId, request);
 
         return ResponseEntity.ok(HttpStatus.OK);
     }
