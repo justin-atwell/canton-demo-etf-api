@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class NAVService {
-    public String createNAV(String partyId, PostNavRequest request) {
+    public String createNAV(String partyId, String ticker, PostNavRequest request) {
         return null;
     }
 

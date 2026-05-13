@@ -27,7 +27,7 @@ public class NAVController {
             @PathVariable String ticker){
 
         String partyId = partyResolver.resolveParty(authHeader);
-        String navId = navService.createNAV(partyId, request);
+        String navId = navService.createNAV(partyId, ticker, request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(navId);
     }
