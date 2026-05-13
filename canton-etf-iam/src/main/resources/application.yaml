@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: canton-etf-iam
+  ldap:
+    urls: ${LDAP_URL:ldap://localhost:389}
+    base: ${LDAP_BASE:dc=etf,dc=com}
+    username: ${LDAP_USERNAME:cn=admin,dc=etf,dc=com}
+    password: ${LDAP_PASSWORD:admin}
+
+server:
+  port: 8081
+
+canton:
+  ledger:
+    host: ${CANTON_LEDGER_HOST:localhost}
+    port: ${CANTON_LEDGER_PORT:6865}
+  ldap:
+    sync:
+      interval: ${LDAP_SYNC_INTERVAL:30000}
+
+auth0:
+  issuer: ${AUTH0_ISSUER:https://your-tenant.auth0.com/}
+  audience: ${AUTH0_AUDIENCE:https://canton-etf-api}
+
+logging:
+  level:
+    com.canton.etf: DEBUG
