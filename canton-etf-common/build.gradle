@@ -19,6 +19,12 @@ dependencies {
     api 'org.slf4j:slf4j-api:2.0.9'
 
     api 'org.springframework.boot:spring-boot-starter:3.4.5'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testImplementation 'org.mockito:mockito-core:5.8.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.8.0'
 }
 
 tasks.register('damlCodegen', Exec) {
@@ -37,4 +43,8 @@ subprojects {
             }
         }
     }
+}
+
+test {
+    useJUnitPlatform()
 }
