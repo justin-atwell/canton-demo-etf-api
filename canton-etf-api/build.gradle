@@ -13,7 +13,9 @@ dependencies {
     // Auth0 Spring Security integration
     implementation 'com.okta.spring:okta-spring-boot-starter:3.0.6'
 
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
 }

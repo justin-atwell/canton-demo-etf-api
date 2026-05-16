@@ -13,12 +13,11 @@ public class CantonPartyResolver {
     }
 
     public String resolveParty(String bearerToken) {
+        if (jwtValidator.isDevMode()) {
+            return jwtValidator.getDevPartyId();
+        }
         String token = bearerToken.replace("Bearer ", "");
         DecodedJWT jwt = jwtValidator.validate(token);
-        String partyId = jwtValidator.extractPartyId(jwt);
-        if (partyId == null || partyId.isBlank()) {
-            throw new SecurityException("No canton_party_id claim in JWT");
-        }
-        return partyId;
+        return jwtValidator.extractPartyId(jwt);
     }
 }

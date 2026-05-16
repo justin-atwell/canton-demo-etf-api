@@ -12,11 +12,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfSystemProperty(named = "integration", matches = "true")
 class LedgerIntegrationTest {
 
-    private static final String FUND_MANAGER = System.getProperty(
-            "ledger.fundManager",
-            "FundManager::122087ac9bdbd4119788f110c34c06d14a999b810540f689fc3a66bb58643da548b9"
-    );
-
+    private static final String FUND_MANAGER =
+            "FundManager::1220654ea376a38d37c3e21afb99c8d73e613add19378040683dd778a4107f1ebee2";
     @Test
     void canConnectToSandbox() {
         var channel = ManagedChannelBuilder

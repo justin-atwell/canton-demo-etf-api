@@ -17,17 +17,24 @@ public class Auth0JwtValidator {
     private final String issuer;
     private final String audience;
     private final JwkProvider jwkProvider;
+    private final boolean devMode;
 
     public Auth0JwtValidator(
             @Value("${auth0.issuer}") String issuer,
-            @Value("${auth0.audience}") String audience) throws Exception {
+            @Value("${auth0.audience}") String audience,
+            @Value("${auth0.dev-mode:false}") boolean devMode) throws Exception {
         this.issuer = issuer;
         this.audience = audience;
+        this.devMode = devMode;
         this.jwkProvider = new JwkProviderBuilder(new URL(issuer + ".well-known/jwks.json"))
                 .build();
     }
 
     public DecodedJWT validate(String token) {
+        if (devMode) {
+            // In dev mode, skip signature validation and just decode
+            return JWT.decode(token);
+        }
         try {
             DecodedJWT decoded = JWT.decode(token);
             var jwk = jwkProvider.get(decoded.getKeyId());
@@ -43,6 +50,20 @@ public class Auth0JwtValidator {
     }
 
     public String extractPartyId(DecodedJWT jwt) {
+        if (devMode) {
+            // In dev mode, return the party from the Authorization header value directly
+            // if no canton_party_id claim exists
+            String partyId = jwt.getClaim("canton_party_id").asString();
+            return partyId != null ? partyId : "FundManager::replace me";
+        }
         return jwt.getClaim("canton_party_id").asString();
+    }
+
+    public boolean isDevMode() {
+        return devMode;
+    }
+
+    public String getDevPartyId() {
+        return "FundManager::replace me";
     }
 }

@@ -7,6 +7,7 @@ import com.daml.ledger.javaapi.data.codegen.ContractTypeCompanion;
 import io.grpc.ManagedChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.daml.ledger.javaapi.data.GetActiveContractsRequest;
 import com.daml.ledger.javaapi.data.EventFormat;
@@ -21,6 +22,7 @@ public class LedgerCommandService {
     private final CommandServiceGrpc.CommandServiceBlockingStub commandService;
     private final StateServiceGrpc.StateServiceBlockingStub stateService;
 
+    @Autowired
     public LedgerCommandService(ManagedChannel channel) {
         this.commandService = CommandServiceGrpc.newBlockingStub(channel);
         this.stateService = StateServiceGrpc.newBlockingStub(channel);
@@ -47,7 +49,7 @@ public class LedgerCommandService {
                 applicationId,
                 commandId,
                 java.util.Optional.empty(),
-                commands);
+                commands).withActAs(partyId);
 
         commandService.submitAndWait(
                 com.daml.ledger.api.v2.CommandServiceOuterClass.SubmitAndWaitRequest
@@ -55,11 +57,13 @@ public class LedgerCommandService {
                         .setCommands(submission.toProto())
                         .build());
 
+        log.info("submitAndWait completed successfully for commandId={}", commandId);
+
         return commandId;
     }
 
     public List<CreatedEvent> getActiveContracts(String partyId, EventFormat eventFormat) {
-        var request = new GetActiveContractsRequest(eventFormat, 0L);
+        var request = new GetActiveContractsRequest(eventFormat, getLedgerEnd());
         var results = new ArrayList<CreatedEvent>();
         stateService.getActiveContracts(request.toProto()).forEachRemaining(response -> {
             if (response.hasActiveContract()) {
@@ -69,6 +73,15 @@ public class LedgerCommandService {
             }
         });
         log.info("getActiveContracts partyId={} found={}", partyId, results.size());
+
         return results;
+    }
+
+    private long getLedgerEnd() {
+        var stub = stateService;
+        var request = com.daml.ledger.api.v2.StateServiceOuterClass
+                .GetLedgerEndRequest.newBuilder().build();
+        var response = stub.getLedgerEnd(request);
+        return response.getOffset();
     }
 }

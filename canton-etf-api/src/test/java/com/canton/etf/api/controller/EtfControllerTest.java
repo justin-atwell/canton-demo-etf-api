@@ -67,13 +67,27 @@ class EtfControllerTest {
     @Test
     @WithMockUser
     void getEtf_validRequest_returns200() throws Exception {
+        var etfResponse = new com.canton.etf.api.dto.EtfResponse(
+                "canton::etf::001",
+                "SPY",
+                "SPDR S&P 500",
+                "78462F103",
+                "Active",
+                "FundManager::abc123",
+                "Custodian::abc123",
+                "Compliance::abc123",
+                "Auditor::abc123",
+                java.time.LocalDate.of(2025, 1, 15)
+        );
+
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
-        when(etfService.getEtf(eq("FundManager::abc123"), eq("SPY"))).thenReturn("SPY details");
+        when(etfService.getEtf(eq("FundManager::abc123"), eq("SPY"))).thenReturn(etfResponse);
 
         mvc.perform(get("/etf/SPY")
                         .header("Authorization", "Bearer test-token"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("SPY details"));
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(etfResponse)));
     }
 
     @Test

@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: canton-etf-api
+
+server:
+  port: 8080
+
+canton:
+  ledger:
+    host: localhost
+    port: 6865
+
+auth0:
+  issuer: https://canton-demo.us.auth0.com/
+  audience: https://canton-etf-api
+  dev-mode: true
+
+logging:
+  level:
+    com.canton.etf: DEBUG

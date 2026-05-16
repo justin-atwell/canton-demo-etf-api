@@ -1,14 +1,19 @@
 package com.canton.etf.api.service;
 
 import com.canton.etf.api.dto.CreateEtfRequest;
+import com.canton.etf.api.dto.EtfResponse;
 import com.canton.etf.common.ledger.LedgerCommandService;
 import com.canton.etf.model.canton.etf.fund.etfdefinition.ETFDefinition;
-import org.springframework.stereotype.Service;
+import com.daml.ledger.javaapi.data.CumulativeFilter;
+import com.daml.ledger.javaapi.data.EventFormat;
+import com.daml.ledger.javaapi.data.Filter;
 import com.daml.ledger.javaapi.data.Identifier;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
@@ -46,9 +51,43 @@ public class EtfService {
 
         return request.ticker();
     }
-    public Object getEtf(String partyId, String ticker) {
-        // TODO: query active ETFDefinition contracts from ledger
-        return Map.of("ticker", ticker, "status", "Active", "message", "Ledger query coming soon");
+    public EtfResponse getEtf(String partyId, String ticker) {
+        EventFormat eventFormat = new EventFormat(
+                Map.of(
+                        partyId,
+                        new CumulativeFilter(
+                                Map.of(),
+                                Map.of(),
+                                Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
+                        )
+                ),
+                Optional.empty(),
+                true
+        );
+
+        var events = ledgerCommandService.getActiveContracts(partyId, eventFormat);
+        log.info("Total events: {} partyId: {}", events.size(), partyId);
+
+// Temporary: also try querying with anyPartyFilter instead
+        EventFormat anyPartyFormat = new EventFormat(
+                Map.of(),
+                Optional.of(new CumulativeFilter(
+                        Map.of(),
+                        Map.of(),
+                        Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
+                )),
+                true
+        );
+        var anyEvents = ledgerCommandService.getActiveContracts(partyId, anyPartyFormat);
+        log.info("anyPartyFilter events: {}", anyEvents.size());
+
+        return events.stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
+                .map(ETFDefinition.Contract::fromCreatedEvent)
+                .filter(contract -> contract.data.ticker.equals(ticker))
+                .findFirst()
+                .map(EtfResponse::from)
+                .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
     }
 
     public void suspendEtf(String partyId, String ticker) {
