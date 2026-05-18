@@ -69,4 +69,12 @@ public class RebalanceController {
         rebalanceService.execute(partyId,ticker,proposalId);
         return ResponseEntity.ok(HttpStatus.OK);
     }
+
+    @GetMapping
+    public ResponseEntity<?> getProposals(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String ticker) {
+        String partyId = cantonPartyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(rebalanceService.getProposals(partyId, ticker));
+    }
 }

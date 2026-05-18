@@ -61,6 +61,15 @@ public class RebalanceService {
         return request.proposalId();
     }
 
+    public List<RebalanceProposalResponse> getProposals(String partyId, String ticker) {
+        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+                .stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))
+                .map(RebalanceProposal.Contract::fromCreatedEvent)
+                .filter(c -> c.data.ticker.equals(ticker))
+                .map(RebalanceProposalResponse::from)
+                .toList();
+    }
     // -------------------------------------------------------------------------
     // getProposal
     // -------------------------------------------------------------------------

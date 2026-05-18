@@ -39,4 +39,12 @@ public class NAVController {
 
         return ResponseEntity.ok(navService.getNAV(partyId, ticker));
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getNavHistory(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String ticker) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(navService.getNavHistory(partyId, ticker));
+    }
 }
