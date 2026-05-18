@@ -137,6 +137,15 @@ public class CollateralService {
                 .toList();
     }
 
+    public List<CollateralAccountResponse> getAccounts(String partyId) {
+        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+                .stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("CollateralAccount"))
+                .map(CollateralAccount.Contract::fromCreatedEvent)
+                .map(CollateralAccountResponse::from)
+                .toList();
+    }
+
     // -------------------------------------------------------------------------
     // issueMarginCall
     //   Creates a MarginCall contract.

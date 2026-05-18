@@ -106,4 +106,25 @@ public class CollateralController {
 
         return ResponseEntity.ok(HttpStatus.OK);
     }
+
+    @GetMapping
+    public ResponseEntity<?> getAccounts(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(collateralService.getAccounts(partyId));
+    }
+
+    @GetMapping("/locks")
+    public ResponseEntity<?> getLocks(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(collateralService.getLocks(partyId));
+    }
+
+    @GetMapping("/margincalls")
+    public ResponseEntity<?> getMarginCalls(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(collateralService.getMarginCalls(partyId));
+    }
 }
