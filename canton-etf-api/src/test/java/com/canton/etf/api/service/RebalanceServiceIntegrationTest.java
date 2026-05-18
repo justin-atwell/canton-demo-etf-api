@@ -34,8 +34,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class RebalanceServiceIntegrationTest {
 
     // Update after each `daml start`
-    private static final String FUND_MANAGER     = "FundManager::REPLACE_ME";
-    private static final String COMPLIANCE_PARTY = "ComplianceOfficer::REPLACE_ME";
+    private static final String FUND_MANAGER     = "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+    private static final String COMPLIANCE_PARTY = "ComplianceOfficer::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
 
     private static final String TICKER      = "CXETH";
     private static final String PROPOSAL_ID = "integ-prop-001";

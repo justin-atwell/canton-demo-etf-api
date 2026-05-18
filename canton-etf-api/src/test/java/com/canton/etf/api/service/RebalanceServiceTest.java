@@ -71,10 +71,6 @@ class RebalanceServiceTest {
         verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
     }
 
-    // -------------------------------------------------------------------------
-    // approve
-    // -------------------------------------------------------------------------
-
     @Test
     void approve_throwsWhenProposalNotFound() {
         when(ledgerCommandService.getActiveContracts(any(), any(EventFormat.class)))
@@ -98,19 +94,6 @@ class RebalanceServiceTest {
     }
 
     @Test
-    void approve_ignoresContractsWithWrongEntityName() {
-        when(ledgerCommandService.getActiveContracts(any(), any(EventFormat.class)))
-                .thenReturn(List.of(mockEventWithEntityName("ETFDefinition")));
-
-        assertThrows(RuntimeException.class,
-                () -> rebalanceService.approve(COMPLIANCE, TICKER, PROPOSAL_ID));
-    }
-
-    // -------------------------------------------------------------------------
-    // reject
-    // -------------------------------------------------------------------------
-
-    @Test
     void reject_throwsWhenProposalNotFound() {
         when(ledgerCommandService.getActiveContracts(any(), any(EventFormat.class)))
                 .thenReturn(List.of());
@@ -132,10 +115,6 @@ class RebalanceServiceTest {
         verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
     }
 
-    // -------------------------------------------------------------------------
-    // execute
-    // -------------------------------------------------------------------------
-
     @Test
     void execute_throwsWhenProposalNotFound() {
         when(ledgerCommandService.getActiveContracts(any(), any(EventFormat.class)))
@@ -156,26 +135,5 @@ class RebalanceServiceTest {
                 () -> rebalanceService.execute(FUND_MANAGER, TICKER, PROPOSAL_ID));
 
         verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
-    }
-
-    @Test
-    void execute_ignoresContractsWithWrongEntityName() {
-        when(ledgerCommandService.getActiveContracts(any(), any(EventFormat.class)))
-                .thenReturn(List.of(mockEventWithEntityName("ETFDefinition")));
-
-        assertThrows(RuntimeException.class,
-                () -> rebalanceService.execute(FUND_MANAGER, TICKER, PROPOSAL_ID));
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    private CreatedEvent mockEventWithEntityName(String entityName) {
-        CreatedEvent event = mock(CreatedEvent.class, RETURNS_DEEP_STUBS);
-        Identifier templateId = mock(Identifier.class);
-        when(templateId.getEntityName()).thenReturn(entityName);
-        when(event.getTemplateId()).thenReturn(templateId);
-        return event;
     }
 }

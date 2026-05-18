@@ -54,7 +54,7 @@ public class Auth0JwtValidator {
             // In dev mode, return the party from the Authorization header value directly
             // if no canton_party_id claim exists
             String partyId = jwt.getClaim("canton_party_id").asString();
-            return partyId != null ? partyId : "FundManager::replace me";
+            return partyId != null ? partyId : "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
         }
         return jwt.getClaim("canton_party_id").asString();
     }
@@ -64,6 +64,6 @@ public class Auth0JwtValidator {
     }
 
     public String getDevPartyId() {
-        return "FundManager::replace me";
+        return "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
     }
 }

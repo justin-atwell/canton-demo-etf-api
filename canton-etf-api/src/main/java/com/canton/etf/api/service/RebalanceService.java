@@ -53,7 +53,7 @@ public class RebalanceService {
                 toWeightList(request.newWeights()),
                 Instant.now(),                     // proposedAt
                 "Pending"
-        ).create().commands().get(0);
+        ).create().commands().getFirst();
 
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
 
@@ -147,14 +147,12 @@ public class RebalanceService {
                 .findFirst();
     }
 
-    private Optional<RebalanceProposal.Contract> findProposalContract(
-            String partyId, String ticker, String proposalId) {
+    private Optional<RebalanceProposal.Contract> findProposalContract(String partyId, String ticker, String proposalId) {
         return findProposalEvent(partyId, ticker, proposalId)
                 .map(RebalanceProposal.Contract::fromCreatedEvent);
     }
 
-    private Optional<CreatedEvent> findProposalEvent(
-            String partyId, String ticker, String proposalId) {
+    private Optional<CreatedEvent> findProposalEvent(String partyId, String ticker, String proposalId) {
         return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
                 .stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))
@@ -180,8 +178,7 @@ public class RebalanceService {
         );
     }
 
-    private List<Tuple2<String, BigDecimal>> toWeightList(
-            List<CreateRebalanceRequest.WeightEntry> entries) {
+    private List<Tuple2<String, BigDecimal>> toWeightList(List<CreateRebalanceRequest.WeightEntry> entries) {
         return entries.stream()
                 .map(e -> new Tuple2<>(e.symbol(), BigDecimal.valueOf(e.weight())))
                 .toList();

@@ -122,7 +122,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void lockReturns200() throws Exception {
-        var request = new LockCollateralRequest(50.10d, "he doesnt pay his bills", LocalDateTime.now().toString());
+        var request = new LockCollateralRequest("a243323c",50.10d, "he doesnt pay his bills", LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -136,7 +136,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void lock_missingAuthHeader_returns4xx() throws Exception {
-        var request = new LockCollateralRequest(50.10d, "he doesnt pay his bills", LocalDateTime.now().toString());
+        var request = new LockCollateralRequest("a243323c",50.10d, "he doesnt pay his bills", LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -176,7 +176,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void marginCall_Returns200() throws Exception {
-        var request = new MarginCallRequest("SPY", 11.2d, LocalDateTime.now().toString());
+        var request = new MarginCallRequest("a243323c","SPY", 11.2d, LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -190,7 +190,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void marginCall_missingAuthHeader_returns4xx() throws Exception {
-        var request = new MarginCallRequest("SPY", 11.2d, LocalDateTime.now().toString());
+        var request = new MarginCallRequest("a243323c","SPY", 11.2d, LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -203,7 +203,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void meet_Returns200() throws Exception {
-        var request = new MarginCallRequest("SPY", 11.2d, LocalDateTime.now().toString());
+        var request = new MarginCallRequest("a243323c", "SPY", 11.2d, LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -217,7 +217,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void meet_missingAuthHeader_returns4xx() throws Exception {
-        var request = new MarginCallRequest("SPY", 11.2d, LocalDateTime.now().toString());
+        var request = new MarginCallRequest("a243323c", "SPY", 11.2d, LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -230,7 +230,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void default_Returns200() throws Exception {
-        var request = new MarginCallRequest("SPY", 11.2d, LocalDateTime.now().toString());
+        var request = new MarginCallRequest("a243323c", "SPY", 11.2d, LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 
@@ -244,7 +244,7 @@ public class CollateralControllerTest {
     @Test
     @WithMockUser
     void default_missingAuthHeader_returns4xx() throws Exception {
-        var request = new MarginCallRequest("SPY", 11.2d, LocalDateTime.now().toString());
+        var request = new MarginCallRequest("a243323c", "SPY", 11.2d, LocalDateTime.now().toString());
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
 

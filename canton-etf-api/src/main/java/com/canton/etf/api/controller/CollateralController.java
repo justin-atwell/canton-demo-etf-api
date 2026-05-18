@@ -64,7 +64,7 @@ public class CollateralController {
             @PathVariable String accountId) {
 
         String partyId = partyResolver.resolveParty(authHeader);
-        collateralService.withdraw(partyId, request);
+        collateralService.withdraw(partyId, accountId, request);
 
         return ResponseEntity.ok(HttpStatus.OK);
     }

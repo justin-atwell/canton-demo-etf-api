@@ -35,6 +35,12 @@ class LedgerCommandServiceTest {
     @BeforeEach
     void setUp() {
         service = new LedgerCommandService(commandStub, stateStub);
+
+        var ledgerEndResponse = com.daml.ledger.api.v2.StateServiceOuterClass.GetLedgerEndResponse
+                .newBuilder()
+                .setOffset(0L)
+                .build();
+        when(stateStub.getLedgerEnd(any())).thenReturn(ledgerEndResponse);
     }
 
     @Test

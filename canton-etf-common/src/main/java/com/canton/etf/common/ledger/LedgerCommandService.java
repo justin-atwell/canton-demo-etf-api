@@ -3,7 +3,6 @@ package com.canton.etf.common.ledger;
 import com.daml.ledger.api.v2.CommandServiceGrpc;
 import com.daml.ledger.javaapi.data.*;
 import com.daml.ledger.api.v2.StateServiceGrpc;
-import com.daml.ledger.javaapi.data.codegen.ContractTypeCompanion;
 import io.grpc.ManagedChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,10 +77,10 @@ public class LedgerCommandService {
     }
 
     private long getLedgerEnd() {
-        var stub = stateService;
         var request = com.daml.ledger.api.v2.StateServiceOuterClass
                 .GetLedgerEndRequest.newBuilder().build();
-        var response = stub.getLedgerEnd(request);
+
+        var response = stateService.getLedgerEnd(request);
         return response.getOffset();
     }
 }
