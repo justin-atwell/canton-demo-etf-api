@@ -1,5 +1,6 @@
 package com.canton.etf.api.controller;
 
+import com.canton.etf.api.dto.AccessEventResponse;
 import com.canton.etf.api.service.AuditService;
 import com.canton.etf.api.service.EtfService;
 import com.canton.etf.common.security.CantonPartyResolver;
@@ -11,6 +12,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -42,12 +46,12 @@ public class AuditControllerTest {
     @Test
     @WithMockUser
     void getAccessEvents_valid_returns200() throws Exception {
+        List<AccessEventResponse> accessEventResponseList = new ArrayList<>();
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
-        when(auditService.getAccessEvents("FundManager::abc123")).thenReturn("defnotnull");
+        when(auditService.getAccessEvents("FundManager::abc123")).thenReturn(accessEventResponseList);
 
         mvc.perform(get("/audit")
                         .header("Authorization", "Bearer test-token"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("defnotnull"));
+                .andExpect(status().isOk());
     }
 }

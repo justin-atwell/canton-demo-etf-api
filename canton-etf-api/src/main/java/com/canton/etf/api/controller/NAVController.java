@@ -1,6 +1,6 @@
 package com.canton.etf.api.controller;
 
-import com.canton.etf.api.dto.PostNavRequest;
+import com.canton.etf.api.dto.CreateNAVRequest;
 import com.canton.etf.api.service.NAVService;
 import com.canton.etf.common.security.CantonPartyResolver;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ public class NAVController {
     @PostMapping
     public ResponseEntity<String> nav(
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody PostNavRequest request,
+            @RequestBody CreateNAVRequest request,
             @PathVariable String ticker){
 
         String partyId = partyResolver.resolveParty(authHeader);

@@ -1,6 +1,6 @@
 package com.canton.etf.api.controller;
 
-import com.canton.etf.api.dto.PostNavRequest;
+import com.canton.etf.api.dto.CreateNAVRequest;
 import com.canton.etf.api.service.NAVService;
 import com.canton.etf.common.security.CantonPartyResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,12 +44,12 @@ public class NAVControllerTest {
     @Test
     @WithMockUser
     void NAV_validRequest_returns201() throws Exception {
-        var request = new PostNavRequest(
-                "SPY",
+        var request = new CreateNAVRequest(
+                LocalDate.now(),
+                34.4D,
                 12.43D,
-                4494.433D,
-                "ThegoodKind",
-                LocalDate.now().toString()
+                "ThegoodKind"
+
         );
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");
@@ -66,12 +66,12 @@ public class NAVControllerTest {
     @Test
     @WithMockUser
     void NAV_noHeader_returns4xx() throws Exception {
-        var request = new PostNavRequest(
-                "SPY",
+        var request = new CreateNAVRequest(
+                LocalDate.now(),
+                34.4D,
                 12.43D,
-                4494.433D,
-                "ThegoodKind",
-                LocalDate.now().toString()
+                "ThegoodKind"
+
         );
 
         mvc.perform(post("/etf/spy/nav")
