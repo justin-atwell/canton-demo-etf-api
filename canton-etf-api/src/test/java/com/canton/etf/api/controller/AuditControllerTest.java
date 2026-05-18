@@ -2,7 +2,6 @@ package com.canton.etf.api.controller;
 
 import com.canton.etf.api.dto.AccessEventResponse;
 import com.canton.etf.api.service.AuditService;
-import com.canton.etf.api.service.EtfService;
 import com.canton.etf.common.security.CantonPartyResolver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,10 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = AuditController.class,
