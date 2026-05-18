@@ -8,6 +8,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.List;
+
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -29,10 +32,14 @@ class NbboOracleServiceTest {
     void setUp() {
         when(webClientBuilder.baseUrl(any())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(webClient);
+        when(ledgerCommandService.getActiveContracts(any(), any()))
+                .thenReturn(List.of());
         nbboOracleService = new NbboOracleService(
                 ledgerCommandService,
                 webClientBuilder,
-                "test-api-key");
+                "test-api-key",
+                "MarketMaker::test123"
+        );
     }
 
     @Test
@@ -41,7 +48,7 @@ class NbboOracleServiceTest {
     }
 
     @Test
-    void postQuote_doesNotThrow() {
-        nbboOracleService.postQuote("AAPL", 175.0, 175.5, 100, 100, "MarketMaker::abc123");
+    void postQuote_throwsWhenETFNotFound() {
+        assertThrows(RuntimeException.class, () -> nbboOracleService.postQuote("AAPL", 175.0, 175.5, 100, 100, "MarketMaker::abc123"));
     }
 }

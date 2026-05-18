@@ -61,6 +61,27 @@ public class LedgerCommandService {
         return commandId;
     }
 
+    // -------------------------------------------------------------------------
+    // submitAndWaitWithSubmission
+    //   Used when the caller needs full control over the CommandsSubmission —
+    //   e.g. multi-party actAs (Suspend requires fundManager + compliance).
+    // -------------------------------------------------------------------------
+    public String submitAndWaitWithSubmission(CommandsSubmission submission) {
+        log.info("Submitting multi-party command commandId={} actAs={}",
+                submission.getCommandId(), submission.getActAs());
+
+        commandService.submitAndWait(
+                com.daml.ledger.api.v2.CommandServiceOuterClass.SubmitAndWaitRequest
+                        .newBuilder()
+                        .setCommands(submission.toProto())
+                        .build());
+
+        log.info("submitAndWaitWithSubmission completed successfully for commandId={}",
+                submission.getCommandId());
+
+        return submission.getCommandId();
+    }
+
     public List<CreatedEvent> getActiveContracts(String partyId, EventFormat eventFormat) {
         var request = new GetActiveContractsRequest(eventFormat, getLedgerEnd());
         var results = new ArrayList<CreatedEvent>();

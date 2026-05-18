@@ -11,6 +11,8 @@ canton:
     port: ${CANTON_LEDGER_PORT:6865}
   nbbo:
     interval: ${NBBO_INTERVAL:5000}
+  market-maker:
+    party-id: ${MARKET_MAKER_PARTY_ID:MarketMaker::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246}
 
 polygon:
   api:

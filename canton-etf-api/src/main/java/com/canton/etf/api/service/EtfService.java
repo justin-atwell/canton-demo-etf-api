@@ -4,16 +4,14 @@ import com.canton.etf.api.dto.CreateEtfRequest;
 import com.canton.etf.api.dto.EtfResponse;
 import com.canton.etf.common.ledger.LedgerCommandService;
 import com.canton.etf.model.canton.etf.fund.etfdefinition.ETFDefinition;
-import com.daml.ledger.javaapi.data.CumulativeFilter;
-import com.daml.ledger.javaapi.data.EventFormat;
-import com.daml.ledger.javaapi.data.Filter;
-import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
@@ -51,6 +49,7 @@ public class EtfService {
 
         return request.ticker();
     }
+
     public EtfResponse getEtf(String partyId, String ticker) {
         EventFormat eventFormat = new EventFormat(
                 Map.of(
@@ -68,7 +67,7 @@ public class EtfService {
         var events = ledgerCommandService.getActiveContracts(partyId, eventFormat);
         log.info("Total events: {} partyId: {}", events.size(), partyId);
 
-// Temporary: also try querying with anyPartyFilter instead
+        // Temporary: also try querying with anyPartyFilter instead
         EventFormat anyPartyFormat = new EventFormat(
                 Map.of(),
                 Optional.of(new CumulativeFilter(
@@ -91,7 +90,52 @@ public class EtfService {
     }
 
     public void suspendEtf(String partyId, String ticker) {
-        // TODO: find ETFDefinition contract by ticker and exercise Suspend choice
-        log.info("Suspend requested for ticker {} by party {}", ticker, partyId);
+        ETFDefinition.Contract etf = findEtfContract(partyId, ticker)
+                .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
+
+        var command = new ETFDefinition.ContractId(etf.id.contractId)
+                .exerciseSuspend()
+                .commands()
+                .get(0);
+
+        var submission = CommandsSubmission.create(
+                        APP_ID,
+                        UUID.randomUUID().toString(),
+                        Optional.empty(),
+                        List.of(command))
+                .withActAs(partyId)
+                .withActAs(etf.data.compliance);
+
+        ledgerCommandService.submitAndWaitWithSubmission(submission);
+
+        log.info("ETF suspended: ticker={} by party={}", ticker, partyId);
+    }
+
+    // -------------------------------------------------------------------------
+    // Internal helpers
+    // -------------------------------------------------------------------------
+
+    private Optional<ETFDefinition.Contract> findEtfContract(String partyId, String ticker) {
+        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+                .stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
+                .map(ETFDefinition.Contract::fromCreatedEvent)
+                .filter(c -> c.data.ticker.equals(ticker))
+                .findFirst();
+    }
+
+    private EventFormat buildEventFormat(String partyId) {
+        return new EventFormat(
+                Map.of(
+                        partyId,
+                        new CumulativeFilter(
+                                Map.of(),
+                                Map.of(),
+                                Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
+                        )
+                ),
+                Optional.empty(),
+                true
+        );
     }
 }
