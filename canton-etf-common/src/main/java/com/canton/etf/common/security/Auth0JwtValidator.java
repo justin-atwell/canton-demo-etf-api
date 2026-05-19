@@ -63,7 +63,13 @@ public class Auth0JwtValidator {
         return devMode;
     }
 
-    public String getDevPartyId() {
-        return "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+    public String getDevPartyId(String role) {
+        return switch (role) {
+            case "ComplianceOfficer" -> "ComplianceOfficer::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+            case "Custodian"         -> "Custodian::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+            case "Auditor"           -> "Auditor::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+            case "MarketMaker"       -> "MarketMaker::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+            default                  -> "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+        };
     }
 }

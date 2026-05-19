@@ -1,5 +1,6 @@
 package com.canton.etf.api.service;
 
+import com.canton.etf.api.aspect.LogAccessEvent;
 import com.canton.etf.api.dto.CreateEtfRequest;
 import com.canton.etf.api.dto.EtfResponse;
 import com.canton.etf.common.ledger.LedgerCommandService;
@@ -26,6 +27,7 @@ public class EtfService {
         this.ledgerCommandService = ledgerCommandService;
     }
 
+    @LogAccessEvent(action = "CREATE_ETF", resourceParam = "ticker")
     public String createEtf(String partyId, CreateEtfRequest request) {
         var template = new ETFDefinition(
                 partyId,
@@ -50,6 +52,7 @@ public class EtfService {
         return request.ticker();
     }
 
+    @LogAccessEvent(action = "VIEW_ETF", resourceParam = "ticker")
     public EtfResponse getEtf(String partyId, String ticker) {
         EventFormat eventFormat = new EventFormat(
                 Map.of(
@@ -89,6 +92,19 @@ public class EtfService {
                 .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
     }
 
+    @LogAccessEvent(action = "LIST_ALL_ETFS", resourceParam = "partyId")
+    public List<String> listEtfs(String partyId) {
+        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+                .stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
+                .map(ETFDefinition.Contract::fromCreatedEvent)
+                .map(c -> c.data.ticker)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    @LogAccessEvent(action = "SUSPEND_ETF", resourceParam = "ticker")
     public void suspendEtf(String partyId, String ticker) {
         ETFDefinition.Contract etf = findEtfContract(partyId, ticker)
                 .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));

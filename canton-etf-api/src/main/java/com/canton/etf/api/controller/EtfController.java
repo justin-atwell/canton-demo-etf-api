@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/etf")
 public class EtfController {
@@ -36,6 +38,13 @@ public class EtfController {
             @PathVariable String ticker) {
         String partyId = partyResolver.resolveParty(authHeader);
         return ResponseEntity.ok(etfService.getEtf(partyId, ticker));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<String>> listEtfs(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(etfService.listEtfs(partyId));
     }
 
     @PutMapping("/{ticker}/suspend")

@@ -1,5 +1,6 @@
 package com.canton.etf.api.service;
 
+import com.canton.etf.api.aspect.LogAccessEvent;
 import com.canton.etf.api.dto.CollateralAccountResponse;
 import com.canton.etf.api.dto.CollateralLockResponse;
 import com.canton.etf.api.dto.CollateralTransactionRequest;
@@ -43,6 +44,7 @@ public class CollateralService {
     //   Signatory: custodian (partyId)
     //   All parties supplied in request — no ETF lookup needed.
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "CREATE_COLLATERAL_ACCOUNT", resourceParam = "partyId")
     public String createAccount(String partyId, CreateCollateralAccountRequest request) {
         var command = new CollateralAccount(
                 partyId,                                        // custodian
@@ -65,6 +67,7 @@ public class CollateralService {
     //   Exercises Deposit choice — increases balance.
     //   Controller: custodian
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "DEPOSIT_COLLATERAL", resourceParam = "accountId")
     public void deposit(String accountId, String partyId, CollateralTransactionRequest request) {
         CreatedEvent event = findAccountEvent(partyId, accountId)
                 .orElseThrow(() -> new RuntimeException(
@@ -85,6 +88,7 @@ public class CollateralService {
     //   Controller: custodian
     //   accountId carried inside LockCollateralRequest.
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "LOCK_COLLATERAL", resourceParam = "partyId")
     public void lock(String partyId, LockCollateralRequest request) {
         CreatedEvent event = findAccountEvent(partyId, request.accountId())
                 .orElseThrow(() -> new RuntimeException(
@@ -110,6 +114,7 @@ public class CollateralService {
     //   Controller: custodian
     //   accountId carried inside CollateralTransactionRequest.
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "WITHDRAW_COLLATERAL", resourceParam = "accountId")
     public void withdraw(String partyId, String accountId, CollateralTransactionRequest request) {
         CreatedEvent event = findAccountEvent(partyId, accountId)
                 .orElseThrow(() -> new RuntimeException(
@@ -152,6 +157,7 @@ public class CollateralService {
     //   Signatory: custodian (partyId)
     //   Parties resolved from existing CollateralAccount by accountId.
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "ISSUE_MARGIN_CALL", resourceParam = "partyId")
     public void issueMarginCall(String partyId, MarginCallRequest request) {
         CreatedEvent event = findAccountEvent(partyId, request.accountId())
                 .orElseThrow(() -> new RuntimeException(
@@ -192,6 +198,7 @@ public class CollateralService {
     //   Exercises Meet choice — transitions status to "Met".
     //   Controller: fundManager
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "MEET_MARGIN_CALL", resourceParam = "callId")
     public void meetMarginCall(String partyId, String callId, MarginCallRequest request) {
         Command command = new MarginCall.ContractId(callId)
                 .exerciseMeet()
@@ -207,6 +214,7 @@ public class CollateralService {
     //   Exercises Default choice — transitions status to "Defaulted".
     //   Controller: custodian
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "DEFAULT_MARGIN_CALL", resourceParam = "callId")
     public void defaultMarginCall(String partyId, String callId, MarginCallRequest request) {
         Command command = new MarginCall.ContractId(callId)
                 .exerciseDefault()

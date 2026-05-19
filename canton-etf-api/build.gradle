@@ -16,6 +16,7 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.mockito', module: 'mockito-core'
     }
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.testcontainers:junit-jupiter:1.19.0'
@@ -26,4 +27,8 @@ tasks.named('test') {
         languageVersion = JavaLanguageVersion.of(21)
     }
     jvmArgs '-XX:+EnableDynamicAgentLoading'
+}
+
+tasks.named('compileJava') {
+    options.compilerArgs << '-parameters'
 }

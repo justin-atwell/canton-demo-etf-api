@@ -14,10 +14,19 @@ public class CantonPartyResolver {
 
     public String resolveParty(String bearerToken) {
         if (jwtValidator.isDevMode()) {
-            return jwtValidator.getDevPartyId();
+            String role = extractDevRole(bearerToken);
+            return jwtValidator.getDevPartyId(role);
         }
         String token = bearerToken.replace("Bearer ", "");
         DecodedJWT jwt = jwtValidator.validate(token);
         return jwtValidator.extractPartyId(jwt);
+    }
+
+    private String extractDevRole(String bearerToken) {
+        // Convention: "Bearer dev-ComplianceOfficer" → "ComplianceOfficer"
+        if (bearerToken != null && bearerToken.startsWith("Bearer dev-")) {
+            return bearerToken.replace("Bearer dev-", "");
+        }
+        return "FundManager";
     }
 }

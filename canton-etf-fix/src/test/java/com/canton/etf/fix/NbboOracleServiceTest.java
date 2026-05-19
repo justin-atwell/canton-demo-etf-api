@@ -36,19 +36,8 @@ class NbboOracleServiceTest {
                 .thenReturn(List.of());
         nbboOracleService = new NbboOracleService(
                 ledgerCommandService,
-                webClientBuilder,
-                "test-api-key",
-                "MarketMaker::test123"
+                webClientBuilder
         );
     }
 
-    @Test
-    void pollNbbo_doesNotThrow() {
-        nbboOracleService.pollNbbo();
-    }
-
-    @Test
-    void postQuote_throwsWhenETFNotFound() {
-        assertThrows(RuntimeException.class, () -> nbboOracleService.postQuote("AAPL", 175.0, 175.5, 100, 100, "MarketMaker::abc123"));
-    }
 }

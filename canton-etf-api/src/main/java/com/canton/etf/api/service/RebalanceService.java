@@ -1,5 +1,6 @@
 package com.canton.etf.api.service;
 
+import com.canton.etf.api.aspect.LogAccessEvent;
 import com.canton.etf.api.dto.CreateRebalanceRequest;
 import com.canton.etf.api.dto.RebalanceProposalResponse;
 import com.canton.etf.common.ledger.LedgerCommandService;
@@ -33,12 +34,7 @@ public class RebalanceService {
         this.ledgerCommandService = ledgerCommandService;
     }
 
-    // -------------------------------------------------------------------------
-    // propose
-    //   Resolves custodian/compliance/auditor from ETFDefinition by ticker.
-    //   Signatory: fundManager (the calling party).
-    //   Returns proposalId — controller sends it back as 201 body.
-    // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "PROPOSE_REBALANCE", resourceParam = "ticker")
     public String propose(String partyId, String ticker, CreateRebalanceRequest request) {
         ETFDefinition.Contract etf = findEtfContract(partyId, ticker)
                 .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
@@ -80,10 +76,7 @@ public class RebalanceService {
                         "RebalanceProposal not found: " + proposalId + " ticker: " + ticker));
     }
 
-    // -------------------------------------------------------------------------
-    // approve
-    //   Controller: compliance
-    // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "APPROVE_REBALANCE", resourceParam = "proposalId")
     public void approve(String partyId, String ticker, String proposalId) {
         CreatedEvent event = findProposalEvent(partyId, ticker, proposalId)
                 .orElseThrow(() -> new RuntimeException(
@@ -98,11 +91,7 @@ public class RebalanceService {
         log.info("RebalanceProposal approved: proposalId={}", proposalId);
     }
 
-    // -------------------------------------------------------------------------
-    // reject
-    //   Controller: compliance
-    //   Archives original, creates new contract with status "Rejected"
-    // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "REJECT_REBALANCE", resourceParam = "proposalId")
     public void reject(String partyId, String ticker, String proposalId) {
         CreatedEvent event = findProposalEvent(partyId, ticker, proposalId)
                 .orElseThrow(() -> new RuntimeException(
@@ -117,11 +106,7 @@ public class RebalanceService {
         log.info("RebalanceProposal rejected: proposalId={}", proposalId);
     }
 
-    // -------------------------------------------------------------------------
-    // execute
-    //   Controller: fundManager
-    //   Status guard mirrors the assert in Daml — belt and suspenders.
-    // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "EXECUTE_REBALANCE", resourceParam = "proposalId")
     public void execute(String partyId, String ticker, String proposalId) {
         CreatedEvent event = findProposalEvent(partyId, ticker, proposalId)
                 .orElseThrow(() -> new RuntimeException(

@@ -1,5 +1,6 @@
 package com.canton.etf.api.service;
 
+import com.canton.etf.api.aspect.LogAccessEvent;
 import com.canton.etf.api.dto.CreateNAVRequest;
 import com.canton.etf.api.dto.NAVResponse;
 import com.canton.etf.common.ledger.LedgerCommandService;
@@ -37,6 +38,7 @@ public class NAVService {
     //   Resolves custodian/compliance/auditor from ETFDefinition by ticker.
     //   Returns navDate as string — used as the created resource identifier.
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "POST_NAV", resourceParam = "ticker")
     public String createNAV(String partyId, String ticker, CreateNAVRequest request) {
         ETFDefinition.Contract etf = findEtfContract(partyId, ticker)
                 .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
@@ -63,6 +65,7 @@ public class NAVService {
     // getNAV
     //   Returns the most recent NAV contract for a ticker by navDate.
     // -------------------------------------------------------------------------
+    @LogAccessEvent(action = "VIEW_NAV", resourceParam = "ticker")
     public NAVResponse getNAV(String partyId, String ticker) {
         return getNavHistory(partyId, ticker)
                 .stream()
