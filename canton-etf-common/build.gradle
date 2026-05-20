@@ -28,10 +28,10 @@ dependencies {
 }
 
 tasks.register('damlCodegen', Exec) {
-    workingDir '../canton-demo-etf-daml'
+    workingDir '../../canton-demo-etf-daml'
     commandLine 'daml', 'codegen', 'java',
             '.daml/dist/canton-demo-etf-0.1.0.dar=com.canton.etf.model',
-            '-o', "${projectDir}/canton-etf-common/src/main/java"
+            '-o', "${rootProject.projectDir}/canton-etf-common/src/main/java"
     description 'Generate Java bindings from Daml DAR'
 }
 

@@ -40,6 +40,7 @@ public class AccessEventService {
     // -------------------------------------------------------------------------
     public void record(
             String actorPartyId,
+            String auditorPartyId,
             String action,
             String resource,
             boolean granted) {
@@ -48,6 +49,7 @@ public class AccessEventService {
             var command = new AccessEvent(
                     operatorPartyId,
                     actorPartyId,
+                    auditorPartyId,
                     action,
                     resource,
                     Instant.now(),

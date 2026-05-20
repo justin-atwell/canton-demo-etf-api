@@ -60,6 +60,11 @@ public class EtfService {
         var events = ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId));
         log.info("Total events: {} partyId: {}", events.size(), partyId);
 
+        long etfCount = events.stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
+                .count();
+        log.info("ETFDefinition contracts visible: {} for ticker search: {}", etfCount, ticker);
+
         ETFDefinition.Contract etf = events.stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
                 .map(ETFDefinition.Contract::fromCreatedEvent)
@@ -149,10 +154,23 @@ public class EtfService {
     // -------------------------------------------------------------------------
 
     private Optional<ETFDefinition.Contract> findEtfContract(String partyId, String ticker) {
-        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
-                .stream()
+        var events = ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId));
+        log.info("findEtfContract: partyId={} ticker={} totalEvents={}", partyId, ticker, events.size());
+
+        events.stream()
+                .map(e -> e.getTemplateId().getEntityName())
+                .distinct()
+                .forEach(name -> log.info("  Template found: {}", name));
+
+        var etfEvents = events.stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
                 .map(ETFDefinition.Contract::fromCreatedEvent)
+                .toList();
+
+        log.info("  ETFDefinition count: {} looking for ticker: {}", etfEvents.size(), ticker);
+        etfEvents.forEach(c -> log.info("  ETF: ticker={} contractId={}", c.data.ticker, c.id.contractId));
+
+        return etfEvents.stream()
                 .filter(c -> c.data.ticker.equals(ticker))
                 .findFirst();
     }

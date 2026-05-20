@@ -147,8 +147,21 @@ public class RebalanceService {
     }
 
     private Optional<CreatedEvent> findProposalEvent(String partyId, String ticker, String proposalId) {
-        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
-                .stream()
+        var events = ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId));
+
+        long count = events.stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))
+                .count();
+        log.info("findProposalEvent: partyId={} ticker={} proposalId={} totalEvents={} rebalanceProposalCount={}",
+                partyId, ticker, proposalId, events.size(), count);
+
+        events.stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))
+                .map(RebalanceProposal.Contract::fromCreatedEvent)
+                .forEach(c -> log.info("  RebalanceProposal: proposalId={} ticker={} status={}",
+                        c.data.proposalId, c.data.ticker, c.data.status));
+
+        return events.stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))
                 .filter(e -> {
                     RebalanceProposal.Contract c = RebalanceProposal.Contract.fromCreatedEvent(e);

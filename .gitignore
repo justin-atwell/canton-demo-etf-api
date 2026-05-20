@@ -37,4 +37,4 @@ bin/
 .DS_Store
 
 ### Daml generated code ###
-canton-etf-common/src/main/java/com/canton/etf/model/
+canton-etf-common/src/main/java/com/canton/etf/model/canton-etf-common/canton-etf-common/

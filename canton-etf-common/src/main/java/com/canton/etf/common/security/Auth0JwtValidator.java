@@ -54,7 +54,7 @@ public class Auth0JwtValidator {
             // In dev mode, return the party from the Authorization header value directly
             // if no canton_party_id claim exists
             String partyId = jwt.getClaim("canton_party_id").asString();
-            return partyId != null ? partyId : "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+            return partyId != null ? partyId : "FundManager::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
         }
         return jwt.getClaim("canton_party_id").asString();
     }
@@ -65,11 +65,12 @@ public class Auth0JwtValidator {
 
     public String getDevPartyId(String role) {
         return switch (role) {
-            case "ComplianceOfficer" -> "ComplianceOfficer::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
-            case "Custodian"         -> "Custodian::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
-            case "Auditor"           -> "Auditor::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
-            case "MarketMaker"       -> "MarketMaker::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
-            default                  -> "FundManager::122098c1ad5e25e586fa2b430a016c2f67a8718cc26ae8ce39529c84a9c6614f2246";
+            case "ComplianceOfficer" -> "ComplianceOfficer::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
+            case "Custodian"         -> "Custodian::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
+            case "Auditor"           -> "Auditor::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
+            case "MarketMaker"       -> "MarketMaker::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
+            case "Operator"          -> "Operator::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
+            default                  -> "FundManager::1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e";
         };
     }
 }

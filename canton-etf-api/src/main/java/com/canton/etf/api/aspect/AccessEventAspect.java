@@ -5,6 +5,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Parameter;
@@ -16,9 +17,13 @@ import static com.canton.etf.common.ledger.LedgerCommandService.log;
 public class AccessEventAspect {
 
     private final AccessEventService accessEventService;
+    private final String auditorPartyId;
 
-    public AccessEventAspect(AccessEventService accessEventService) {
+    public AccessEventAspect(
+            AccessEventService accessEventService,
+            @Value("${canton.auditor.party-id}") String auditorPartyId) {
         this.accessEventService = accessEventService;
+        this.auditorPartyId = auditorPartyId;
     }
 
     @Around("@annotation(logAccessEvent)")
@@ -40,10 +45,8 @@ public class AccessEventAspect {
             granted = false;
             throw t;
         } finally {
-            // Record access event regardless of success or failure
-            // Never blocks — AccessEventService swallows its own exceptions
             if (partyId != null) {
-                accessEventService.record(partyId, logAccessEvent.action(), resource, granted);
+                accessEventService.record(partyId, auditorPartyId, logAccessEvent.action(), resource, granted);
             } else {
                 log.warn("AccessEventAspect: could not resolve partyId for method={}",
                         signature.getMethod().getName());

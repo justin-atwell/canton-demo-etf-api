@@ -5,7 +5,18 @@
 # -------------------------------------------------------------------------
 # Party IDs — update FINGERPRINT only
 # -------------------------------------------------------------------------
-FINGERPRINT="1220a55eafce442d53c42f69299ba0ad363197e8fac131f2a80ed1e5de8b23b23e27"
+MODE=${1:-all}
+
+echo "⏳ Waiting for API to be ready..."
+until curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/etf -H "Authorization: Bearer dev-FundManager" | grep -q "200"; do
+  echo "   API not ready, retrying in 2s..."
+  sleep 2
+done
+echo "✅ API is ready"
+echo ""
+
+
+FINGERPRINT="1220e0195503d52c91209b03c5ce259b35cc398c32e92bddaf2ee83cd94a1dceac3e"
 
 FUND_MANAGER="FundManager::${FINGERPRINT}"
 CUSTODIAN="Custodian::${FINGERPRINT}"
@@ -14,6 +25,7 @@ AUDITOR="Auditor::${FINGERPRINT}"
 MARKET_MAKER="MarketMaker::${FINGERPRINT}"
 
 BASE="http://localhost:8080"
+
 
 echo "🚀 Seeding Canton ETF Platform..."
 echo "Fingerprint: $FINGERPRINT"
@@ -24,7 +36,7 @@ echo ""
 # -------------------------------------------------------------------------
 echo "📋 Creating ETFs..."
 
-curl -s -X POST $BASE/etf \
+curl -X POST $BASE/etf \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer dev-FundManager" \
   -d "{
@@ -36,8 +48,9 @@ curl -s -X POST $BASE/etf \
     \"auditor\": \"$AUDITOR\"
   }"
 echo " ✅ CXBT created"
+sleep 2
 
-curl -s -X POST $BASE/etf \
+curl -X POST $BASE/etf \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer dev-FundManager" \
   -d "{
@@ -49,8 +62,9 @@ curl -s -X POST $BASE/etf \
     \"auditor\": \"$AUDITOR\"
   }"
 echo " ✅ CXETH created"
+sleep 2
 
-curl -s -X POST $BASE/etf \
+curl -X POST $BASE/etf \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer dev-FundManager" \
   -d "{
@@ -62,185 +76,195 @@ curl -s -X POST $BASE/etf \
     \"auditor\": \"$AUDITOR\"
   }"
 echo " ✅ SPY created"
+sleep 5
+echo ""
 
+echo ""
+echo "⏳ Waiting for ETF contracts to commit..."
+sleep 3
 echo ""
 
 # -------------------------------------------------------------------------
 # NAV — CXBT
 # -------------------------------------------------------------------------
-echo "📈 Seeding NAV history for CXBT..."
+if [ "$MODE" = "all" ]; then
+  echo "📈 Seeding NAV history for CXBT..."
 
-for i in {29..0}; do
-  DATE=$(date -v -${i}d +%Y-%m-%d 2>/dev/null || date -d "-${i} days" +%Y-%m-%d)
-  NAV=$(echo "scale=2; 82 + $RANDOM % 10 + $RANDOM % 100 / 100" | bc)
-  AUM=$(echo "scale=0; 800000000 + $RANDOM % 100000000" | bc)
-  curl -s -X POST $BASE/etf/CXBT/nav \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer dev-FundManager" \
-    -d "{
-      \"navDate\": \"$DATE\",
-      \"navPerShare\": $NAV,
-      \"totalAUM\": $AUM,
-      \"source\": \"FundManager\"
-    }" > /dev/null
-done
-echo " ✅ CXBT NAV seeded (30 days)"
+  for i in {29..0}; do
+    DATE=$(date -v -${i}d +%Y-%m-%d 2>/dev/null || date -d "-${i} days" +%Y-%m-%d)
+    NAV=$(echo "scale=2; 82 + $RANDOM % 10 + $RANDOM % 100 / 100" | bc)
+    AUM=$(echo "scale=0; 800000000 + $RANDOM % 100000000" | bc)
+    curl -s -X POST $BASE/etf/CXBT/nav \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-FundManager" \
+      -d "{
+        \"navDate\": \"$DATE\",
+        \"navPerShare\": $NAV,
+        \"totalAUM\": $AUM,
+        \"source\": \"FundManager\"
+      }"
+  done
+  echo " ✅ CXBT NAV seeded (30 days)"
+fi
 
 # -------------------------------------------------------------------------
 # NAV — CXETH
 # -------------------------------------------------------------------------
-echo "📈 Seeding NAV history for CXETH..."
+if [ "$MODE" = "all" ]; then
+  echo "📈 Seeding NAV history for CXETH..."
 
-for i in {29..0}; do
-  DATE=$(date -v -${i}d +%Y-%m-%d 2>/dev/null || date -d "-${i} days" +%Y-%m-%d)
-  NAV=$(echo "scale=2; 45 + $RANDOM % 8 + $RANDOM % 100 / 100" | bc)
-  AUM=$(echo "scale=0; 400000000 + $RANDOM % 50000000" | bc)
-  curl -s -X POST $BASE/etf/CXETH/nav \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer dev-FundManager" \
-    -d "{
-      \"navDate\": \"$DATE\",
-      \"navPerShare\": $NAV,
-      \"totalAUM\": $AUM,
-      \"source\": \"FundManager\"
-    }" > /dev/null
-done
-echo " ✅ CXETH NAV seeded (30 days)"
-
+  for i in {29..0}; do
+    DATE=$(date -v -${i}d +%Y-%m-%d 2>/dev/null || date -d "-${i} days" +%Y-%m-%d)
+    NAV=$(echo "scale=2; 45 + $RANDOM % 8 + $RANDOM % 100 / 100" | bc)
+    AUM=$(echo "scale=0; 400000000 + $RANDOM % 50000000" | bc)
+    curl -s -X POST $BASE/etf/CXETH/nav \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-FundManager" \
+      -d "{
+        \"navDate\": \"$DATE\",
+        \"navPerShare\": $NAV,
+        \"totalAUM\": $AUM,
+        \"source\": \"FundManager\"
+      }"
+  done
+  echo " ✅ CXETH NAV seeded (30 days)"
+fi
 # -------------------------------------------------------------------------
 # NAV — SPY
 # -------------------------------------------------------------------------
-echo "📈 Seeding NAV history for SPY..."
+if [ "$MODE" = "all" ]; then
+  echo "📈 Seeding NAV history for SPY..."
 
-for i in {29..0}; do
-  DATE=$(date -v -${i}d +%Y-%m-%d 2>/dev/null || date -d "-${i} days" +%Y-%m-%d)
-  NAV=$(echo "scale=2; 520 + $RANDOM % 30 + $RANDOM % 100 / 100" | bc)
-  AUM=$(echo "scale=0; 5000000000 + $RANDOM % 500000000" | bc)
-  curl -s -X POST $BASE/etf/SPY/nav \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Bearer dev-FundManager" \
-    -d "{
-      \"navDate\": \"$DATE\",
-      \"navPerShare\": $NAV,
-      \"totalAUM\": $AUM,
-      \"source\": \"FundManager\"
-    }" > /dev/null
-done
-echo " ✅ SPY NAV seeded (30 days)"
-
+  for i in {29..0}; do
+    DATE=$(date -v -${i}d +%Y-%m-%d 2>/dev/null || date -d "-${i} days" +%Y-%m-%d)
+    NAV=$(echo "scale=2; 520 + $RANDOM % 30 + $RANDOM % 100 / 100" | bc)
+    AUM=$(echo "scale=0; 5000000000 + $RANDOM % 500000000" | bc)
+    curl -s -X POST $BASE/etf/SPY/nav \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer dev-FundManager" \
+      -d "{
+        \"navDate\": \"$DATE\",
+        \"navPerShare\": $NAV,
+        \"totalAUM\": $AUM,
+        \"source\": \"FundManager\"
+      }"
+  done
+  echo " ✅ SPY NAV seeded (30 days)"
+fi
 echo ""
 
 # -------------------------------------------------------------------------
 # Constituents — CXBT (weights sum to 1.0)
 # -------------------------------------------------------------------------
-echo "⚖️  Adding constituents for CXBT..."
+if [ "$MODE" = "etf-only" ] || [ "$MODE" = "all" ]; then
+  echo "⚖️  Adding constituents for CXBT..."
 
-curl -s -X POST $BASE/etf/CXBT/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"BTC","name":"Bitcoin","cusip":"BTC-SPOT","weight":0.45}' > /dev/null
-echo " ✅ BTC 45%"
+  curl -s -X POST $BASE/etf/CXBT/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"BTC","name":"Bitcoin","cusip":"BTC-SPOT","weight":0.45}' > /dev/null
+  echo " ✅ BTC 45%"
 
-curl -s -X POST $BASE/etf/CXBT/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"ETH","name":"Ethereum","cusip":"ETH-SPOT","weight":0.25}' > /dev/null
-echo " ✅ ETH 25%"
+  curl -s -X POST $BASE/etf/CXBT/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"ETH","name":"Ethereum","cusip":"ETH-SPOT","weight":0.25}' > /dev/null
+  echo " ✅ ETH 25%"
 
-curl -s -X POST $BASE/etf/CXBT/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"SOL","name":"Solana","cusip":"SOL-SPOT","weight":0.15}' > /dev/null
-echo " ✅ SOL 15%"
+  curl -s -X POST $BASE/etf/CXBT/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"SOL","name":"Solana","cusip":"SOL-SPOT","weight":0.15}' > /dev/null
+  echo " ✅ SOL 15%"
 
-curl -s -X POST $BASE/etf/CXBT/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"AVAX","name":"Avalanche","cusip":"AVAX-SPOT","weight":0.10}' > /dev/null
-echo " ✅ AVAX 10%"
+  curl -s -X POST $BASE/etf/CXBT/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"AVAX","name":"Avalanche","cusip":"AVAX-SPOT","weight":0.10}' > /dev/null
+  echo " ✅ AVAX 10%"
 
-curl -s -X POST $BASE/etf/CXBT/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"LINK","name":"Chainlink","cusip":"LINK-SPOT","weight":0.05}' > /dev/null
-echo " ✅ LINK 5%"
+  curl -s -X POST $BASE/etf/CXBT/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"LINK","name":"Chainlink","cusip":"LINK-SPOT","weight":0.05}' > /dev/null
+  echo " ✅ LINK 5%"
 
-# -------------------------------------------------------------------------
-# Constituents — CXETH (weights sum to 1.0)
-# -------------------------------------------------------------------------
-echo "⚖️  Adding constituents for CXETH..."
+  # -------------------------------------------------------------------------
+  # Constituents — CXETH (weights sum to 1.0)
+  # -------------------------------------------------------------------------
+  echo "⚖️  Adding constituents for CXETH..."
 
-curl -s -X POST $BASE/etf/CXETH/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"ETH","name":"Ethereum","cusip":"ETH-SPOT","weight":0.60}' > /dev/null
-echo " ✅ ETH 60%"
+  curl -s -X POST $BASE/etf/CXETH/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"ETH","name":"Ethereum","cusip":"ETH-SPOT","weight":0.60}' > /dev/null
+  echo " ✅ ETH 60%"
 
-curl -s -X POST $BASE/etf/CXETH/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"LDO","name":"Lido DAO","cusip":"LDO-SPOT","weight":0.20}' > /dev/null
-echo " ✅ LDO 20%"
+  curl -s -X POST $BASE/etf/CXETH/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"LDO","name":"Lido DAO","cusip":"LDO-SPOT","weight":0.20}' > /dev/null
+  echo " ✅ LDO 20%"
 
-curl -s -X POST $BASE/etf/CXETH/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"AAVE","name":"Aave","cusip":"AAVE-SPOT","weight":0.20}' > /dev/null
-echo " ✅ AAVE 20%"
+  curl -s -X POST $BASE/etf/CXETH/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"AAVE","name":"Aave","cusip":"AAVE-SPOT","weight":0.20}' > /dev/null
+  echo " ✅ AAVE 20%"
 
-# -------------------------------------------------------------------------
-# Constituents — SPY (weights sum to 1.0)
-# -------------------------------------------------------------------------
-echo "⚖️  Adding constituents for SPY..."
+  # -------------------------------------------------------------------------
+  # Constituents — SPY (weights sum to 1.0)
+  # -------------------------------------------------------------------------
+  echo "⚖️  Adding constituents for SPY..."
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"AAPL","name":"Apple Inc","cusip":"037833100","weight":0.07}' > /dev/null
-echo " ✅ AAPL 7%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"AAPL","name":"Apple Inc","cusip":"037833100","weight":0.07}' > /dev/null
+  echo " ✅ AAPL 7%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"MSFT","name":"Microsoft Corp","cusip":"594918104","weight":0.07}' > /dev/null
-echo " ✅ MSFT 7%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"MSFT","name":"Microsoft Corp","cusip":"594918104","weight":0.07}' > /dev/null
+  echo " ✅ MSFT 7%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"NVDA","name":"NVIDIA Corp","cusip":"67066G104","weight":0.06}' > /dev/null
-echo " ✅ NVDA 6%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"NVDA","name":"NVIDIA Corp","cusip":"67066G104","weight":0.06}' > /dev/null
+  echo " ✅ NVDA 6%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"AMZN","name":"Amazon.com Inc","cusip":"023135106","weight":0.05}' > /dev/null
-echo " ✅ AMZN 5%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"AMZN","name":"Amazon.com Inc","cusip":"023135106","weight":0.05}' > /dev/null
+  echo " ✅ AMZN 5%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"GOOGL","name":"Alphabet Inc","cusip":"02079K305","weight":0.04}' > /dev/null
-echo " ✅ GOOGL 4%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"GOOGL","name":"Alphabet Inc","cusip":"02079K305","weight":0.04}' > /dev/null
+  echo " ✅ GOOGL 4%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"META","name":"Meta Platforms","cusip":"30303M102","weight":0.03}' > /dev/null
-echo " ✅ META 3%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"META","name":"Meta Platforms","cusip":"30303M102","weight":0.03}' > /dev/null
+  echo " ✅ META 3%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"BRK","name":"Berkshire Hathaway","cusip":"084670702","weight":0.02}' > /dev/null
-echo " ✅ BRK 2%"
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"BRK","name":"Berkshire Hathaway","cusip":"084670702","weight":0.02}' > /dev/null
+  echo " ✅ BRK 2%"
 
-curl -s -X POST $BASE/etf/SPY/constituent \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer dev-FundManager" \
-  -d '{"symbol":"OTHER","name":"Remaining S&P 500","cusip":"SPY-OTHER","weight":0.66}' > /dev/null
-echo " ✅ OTHER 66%"
-
+  curl -s -X POST $BASE/etf/SPY/constituent \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer dev-FundManager" \
+    -d '{"symbol":"OTHER","name":"Remaining S&P 500","cusip":"SPY-OTHER","weight":0.66}' > /dev/null
+  echo " ✅ OTHER 66%"
+fi
 # -------------------------------------------------------------------------
 # Collateral Accounts
 # -------------------------------------------------------------------------
