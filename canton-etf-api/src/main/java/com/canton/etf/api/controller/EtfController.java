@@ -1,5 +1,7 @@
 package com.canton.etf.api.controller;
 
+import com.canton.etf.api.dto.AddConstituentRequest;
+import com.canton.etf.api.dto.ConstituentResponse;
 import com.canton.etf.api.dto.CreateEtfRequest;
 import com.canton.etf.api.service.EtfService;
 import com.canton.etf.common.security.CantonPartyResolver;
@@ -54,5 +56,23 @@ public class EtfController {
         String partyId = partyResolver.resolveParty(authHeader);
         etfService.suspendEtf(partyId, ticker);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{ticker}/constituent")
+    public ResponseEntity<String> addConstituent(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String ticker,
+            @RequestBody AddConstituentRequest request) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        String symbol = etfService.addConstituent(partyId, ticker, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(symbol);
+    }
+
+    @GetMapping("/{ticker}/constituent")
+    public ResponseEntity<List<ConstituentResponse>> getConstituents(
+            @RequestHeader("Authorization") String authHeader,
+            @PathVariable String ticker) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(etfService.getConstituents(partyId, ticker));
     }
 }

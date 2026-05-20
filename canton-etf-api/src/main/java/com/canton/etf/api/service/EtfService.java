@@ -1,9 +1,12 @@
 package com.canton.etf.api.service;
 
 import com.canton.etf.api.aspect.LogAccessEvent;
+import com.canton.etf.api.dto.AddConstituentRequest;
+import com.canton.etf.api.dto.ConstituentResponse;
 import com.canton.etf.api.dto.CreateEtfRequest;
 import com.canton.etf.api.dto.EtfResponse;
 import com.canton.etf.common.ledger.LedgerCommandService;
+import com.canton.etf.model.canton.etf.fund.constituent.Constituent;
 import com.canton.etf.model.canton.etf.fund.etfdefinition.ETFDefinition;
 import com.daml.ledger.javaapi.data.*;
 import org.springframework.stereotype.Service;
@@ -54,42 +57,24 @@ public class EtfService {
 
     @LogAccessEvent(action = "VIEW_ETF", resourceParam = "ticker")
     public EtfResponse getEtf(String partyId, String ticker) {
-        EventFormat eventFormat = new EventFormat(
-                Map.of(
-                        partyId,
-                        new CumulativeFilter(
-                                Map.of(),
-                                Map.of(),
-                                Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
-                        )
-                ),
-                Optional.empty(),
-                true
-        );
-
-        var events = ledgerCommandService.getActiveContracts(partyId, eventFormat);
+        var events = ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId));
         log.info("Total events: {} partyId: {}", events.size(), partyId);
 
-        // Temporary: also try querying with anyPartyFilter instead
-        EventFormat anyPartyFormat = new EventFormat(
-                Map.of(),
-                Optional.of(new CumulativeFilter(
-                        Map.of(),
-                        Map.of(),
-                        Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
-                )),
-                true
-        );
-        var anyEvents = ledgerCommandService.getActiveContracts(partyId, anyPartyFormat);
-        log.info("anyPartyFilter events: {}", anyEvents.size());
-
-        return events.stream()
+        ETFDefinition.Contract etf = events.stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
                 .map(ETFDefinition.Contract::fromCreatedEvent)
                 .filter(contract -> contract.data.ticker.equals(ticker))
                 .findFirst()
-                .map(EtfResponse::from)
                 .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
+
+        List<ConstituentResponse> constituents = events.stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("Constituent"))
+                .map(Constituent.Contract::fromCreatedEvent)
+                .filter(c -> c.data.ticker.equals(ticker))
+                .map(ConstituentResponse::from)
+                .toList();
+
+        return EtfResponse.from(etf, constituents);
     }
 
     @LogAccessEvent(action = "LIST_ALL_ETFS", resourceParam = "partyId")
@@ -125,6 +110,38 @@ public class EtfService {
         ledgerCommandService.submitAndWaitWithSubmission(submission);
 
         log.info("ETF suspended: ticker={} by party={}", ticker, partyId);
+    }
+
+    @LogAccessEvent(action = "ADD_CONSTITUENT", resourceParam = "ticker")
+    public String addConstituent(String partyId, String ticker, AddConstituentRequest request) {
+        ETFDefinition.Contract etf = findEtfContract(partyId, ticker)
+                .orElseThrow(() -> new RuntimeException("ETF not found: " + ticker));
+
+        var command = new ETFDefinition.ContractId(etf.id.contractId)
+                .exerciseAddConstituent(
+                        request.symbol(),
+                        request.name(),
+                        request.cusip(),
+                        request.weight()
+                )
+                .commands()
+                .get(0);
+
+        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
+
+        log.info("Constituent added: ticker={} symbol={} weight={}", ticker, request.symbol(), request.weight());
+        return request.symbol();
+    }
+
+    @LogAccessEvent(action = "LIST_CONSTITUENTS", resourceParam = "ticker")
+    public List<ConstituentResponse> getConstituents(String partyId, String ticker) {
+        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+                .stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("Constituent"))
+                .map(Constituent.Contract::fromCreatedEvent)
+                .filter(c -> c.data.ticker.equals(ticker))
+                .map(ConstituentResponse::from)
+                .toList();
     }
 
     // -------------------------------------------------------------------------

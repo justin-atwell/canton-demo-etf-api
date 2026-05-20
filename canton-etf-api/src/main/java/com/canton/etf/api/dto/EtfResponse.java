@@ -3,6 +3,7 @@ package com.canton.etf.api.dto;
 import com.canton.etf.model.canton.etf.fund.etfdefinition.ETFDefinition;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record EtfResponse(
         String contractId,
@@ -14,12 +15,12 @@ public record EtfResponse(
         String custodian,
         String compliance,
         String auditor,
-        LocalDate inceptionDate
+        LocalDate inceptionDate,
+        List<ConstituentResponse> constituents
 ) {
-    // Factory method — converts directly from the ledger contract
-    public static EtfResponse from(ETFDefinition.Contract contract) {
+    public static EtfResponse from(ETFDefinition.Contract contract, List<ConstituentResponse> constituents) {
         return new EtfResponse(
-                contract.id.contractId,       // ledger contract ID as string
+                contract.id.contractId,
                 contract.data.ticker,
                 contract.data.name,
                 contract.data.cusip,
@@ -28,7 +29,8 @@ public record EtfResponse(
                 contract.data.custodian,
                 contract.data.compliance,
                 contract.data.auditor,
-                contract.data.inceptionDate
+                contract.data.inceptionDate,
+                constituents
         );
     }
 }
