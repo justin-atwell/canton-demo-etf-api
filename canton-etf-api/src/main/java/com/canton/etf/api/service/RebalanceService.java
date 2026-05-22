@@ -16,6 +16,7 @@ import com.daml.ledger.javaapi.data.Filter;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -187,7 +188,7 @@ public class RebalanceService {
 
     private List<Tuple2<String, BigDecimal>> toWeightList(List<CreateRebalanceRequest.WeightEntry> entries) {
         return entries.stream()
-                .map(e -> new Tuple2<>(e.symbol(), BigDecimal.valueOf(e.weight())))
-                .toList();
+                .map(e -> new Tuple2<>(e.symbol(), new BigDecimal(String.valueOf(e.weight()))
+                        .setScale(2, RoundingMode.HALF_UP))).toList();
     }
 }

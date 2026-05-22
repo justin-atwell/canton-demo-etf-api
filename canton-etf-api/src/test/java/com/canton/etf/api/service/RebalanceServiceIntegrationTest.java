@@ -7,6 +7,7 @@ import io.grpc.ManagedChannelBuilder;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,8 +47,8 @@ class RebalanceServiceIntegrationTest {
     private static final CreateRebalanceRequest REBALANCE_REQUEST = new CreateRebalanceRequest(
             PROPOSAL_ID,
             List.of(
-                    new CreateRebalanceRequest.WeightEntry("ETH", 0.65),
-                    new CreateRebalanceRequest.WeightEntry("BTC", 0.35)
+                    new CreateRebalanceRequest.WeightEntry("ETH", BigDecimal.valueOf(0.65)),
+                    new CreateRebalanceRequest.WeightEntry("BTC", BigDecimal.valueOf(0.35))
             )
     );
 
@@ -120,7 +121,7 @@ class RebalanceServiceIntegrationTest {
         String rejectProposalId = "integ-prop-reject-001";
         CreateRebalanceRequest rejectRequest = new CreateRebalanceRequest(
                 rejectProposalId,
-                List.of(new CreateRebalanceRequest.WeightEntry("ETH", 1.0))
+                List.of(new CreateRebalanceRequest.WeightEntry("ETH", BigDecimal.valueOf(1.0)))
         );
 
         rebalanceService.propose(FUND_MANAGER, TICKER, rejectRequest);
@@ -142,7 +143,7 @@ class RebalanceServiceIntegrationTest {
         String pendingProposalId = "integ-prop-pending-001";
         CreateRebalanceRequest pendingRequest = new CreateRebalanceRequest(
                 pendingProposalId,
-                List.of(new CreateRebalanceRequest.WeightEntry("ETH", 1.0))
+                List.of(new CreateRebalanceRequest.WeightEntry("ETH", BigDecimal.valueOf(1.0)))
         );
 
         rebalanceService.propose(FUND_MANAGER, TICKER, pendingRequest);

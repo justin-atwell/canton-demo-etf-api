@@ -14,6 +14,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,7 +47,7 @@ class RebalanceControllerTest {
     @WithMockUser
     void createRebalance_validRequest_returns201() throws Exception {
         var weights = new ArrayList<CreateRebalanceRequest.WeightEntry>();
-        weights.add(new CreateRebalanceRequest.WeightEntry("USD", 100));
+        weights.add(new CreateRebalanceRequest.WeightEntry("USD", BigDecimal.valueOf(100)));
 
         var request = new CreateRebalanceRequest(
                 "SPY",

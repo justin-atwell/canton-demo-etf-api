@@ -1,5 +1,6 @@
 package com.canton.etf.api.controller;
 
+import com.canton.etf.api.dto.ConstituentResponse;
 import com.canton.etf.api.dto.CreateEtfRequest;
 import com.canton.etf.api.service.EtfService;
 import com.canton.etf.common.security.CantonPartyResolver;
@@ -20,6 +21,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @WebMvcTest(controllers = EtfController.class,
         excludeAutoConfiguration = {
@@ -67,6 +71,7 @@ class EtfControllerTest {
     @Test
     @WithMockUser
     void getEtf_validRequest_returns200() throws Exception {
+        List<ConstituentResponse> responses = new ArrayList<>();
         var etfResponse = new com.canton.etf.api.dto.EtfResponse(
                 "canton::etf::001",
                 "SPY",
@@ -77,7 +82,8 @@ class EtfControllerTest {
                 "Custodian::abc123",
                 "Compliance::abc123",
                 "Auditor::abc123",
-                java.time.LocalDate.of(2025, 1, 15)
+                java.time.LocalDate.of(2025, 1, 15),
+                responses
         );
 
         when(partyResolver.resolveParty(any())).thenReturn("FundManager::abc123");

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,8 +35,8 @@ class RebalanceServiceTest {
     private static final CreateRebalanceRequest VALID_REQUEST = new CreateRebalanceRequest(
             PROPOSAL_ID,
             List.of(
-                    new CreateRebalanceRequest.WeightEntry("ETH", 0.60),
-                    new CreateRebalanceRequest.WeightEntry("BTC", 0.40)
+                    new CreateRebalanceRequest.WeightEntry("ETH", BigDecimal.valueOf(0.60)),
+                    new CreateRebalanceRequest.WeightEntry("BTC", BigDecimal.valueOf(0.40))
             )
     );
 
