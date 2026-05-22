@@ -12,7 +12,19 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
+
+        // Local development
         config.addAllowedOrigin("http://localhost:5173");
+        config.addAllowedOrigin("http://localhost:3000");
+
+        // Production
+        config.addAllowedOrigin("https://cantonetf.dev");
+        config.addAllowedOrigin("https://www.cantonetf.dev");
+
+        // Firebase Hosting preview channels (for staging deploys)
+        config.addAllowedOriginPattern("https://*.web.app");
+        config.addAllowedOriginPattern("https://*.firebaseapp.com");
+
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
