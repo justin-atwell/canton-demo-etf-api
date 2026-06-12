@@ -48,9 +48,9 @@ import java.util.Set;
 public final class CollateralAccount extends Template {
   public static final Identifier TEMPLATE_ID = new Identifier("#canton-demo-etf", "Canton.ETF.Collateral.CollateralAccount", "CollateralAccount");
 
-  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("1f28d7b7af3161c75a78b37a77e89a8c08d9579c841613879009c4365fd6566c", "Canton.ETF.Collateral.CollateralAccount", "CollateralAccount");
+  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d", "Canton.ETF.Collateral.CollateralAccount", "CollateralAccount");
 
-  public static final String PACKAGE_ID = "1f28d7b7af3161c75a78b37a77e89a8c08d9579c841613879009c4365fd6566c";
+  public static final String PACKAGE_ID = "c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d";
 
   public static final String PACKAGE_NAME = "canton-demo-etf";
 

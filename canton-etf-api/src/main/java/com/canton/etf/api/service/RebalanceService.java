@@ -61,8 +61,7 @@ public class RebalanceService {
     public List<RebalanceProposalResponse> getProposals(String partyId, String ticker) {
         var events = ledgerCommandService.getActiveContracts(
                 partyId,
-                buildEventFormat(partyId),
-                List.of(RebalanceProposal.TEMPLATE_ID)
+                buildEventFormat(partyId)
         );
         return events
                 .stream()
@@ -141,8 +140,7 @@ public class RebalanceService {
     private Optional<ETFDefinition.Contract> findEtfContract(String partyId, String ticker) {
         var events = ledgerCommandService.getActiveContracts(
                 partyId,
-                buildEventFormat(partyId),
-                List.of(RebalanceProposal.TEMPLATE_ID)
+                buildEventFormat(partyId)
         );
 
         return events
@@ -161,8 +159,7 @@ public class RebalanceService {
     private Optional<CreatedEvent> findProposalEvent(String partyId, String ticker, String proposalId) {
         var events = ledgerCommandService.getActiveContracts(
                 partyId,
-                buildEventFormat(partyId),
-                List.of(RebalanceProposal.TEMPLATE_ID)
+                buildEventFormat(partyId)
         );
 
         long count = events.stream()

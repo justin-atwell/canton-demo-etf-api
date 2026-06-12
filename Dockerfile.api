@@ -1,0 +1,15 @@
+FROM eclipse-temurin:21-jre-alpine AS builder
+WORKDIR /app
+COPY canton-etf-api/build/libs/canton-etf-api-0.1.0.jar app.jar
+RUN java -Djarmode=layertools -jar app.jar extract
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S canton && adduser -S canton -G canton
+USER canton
+COPY --from=builder /app/dependencies/ ./
+COPY --from=builder /app/spring-boot-loader/ ./
+COPY --from=builder /app/snapshot-dependencies/ ./
+COPY --from=builder /app/application/ ./
+EXPOSE 8080
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

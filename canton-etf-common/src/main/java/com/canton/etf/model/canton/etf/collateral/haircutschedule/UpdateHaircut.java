@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class UpdateHaircut extends DamlRecord<UpdateHaircut> {
-  public static final String _packageId = "1f28d7b7af3161c75a78b37a77e89a8c08d9579c841613879009c4365fd6566c";
+  public static final String _packageId = "c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d";
 
   public final String asset;
 
