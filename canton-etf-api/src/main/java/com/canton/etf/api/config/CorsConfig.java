@@ -25,6 +25,9 @@ public class CorsConfig {
         config.addAllowedOriginPattern("https://*.web.app");
         config.addAllowedOriginPattern("https://*.firebaseapp.com");
 
+        config.addAllowedOrigin("https://canton-demo-etf-ui.vercel.app");
+        config.addAllowedOriginPattern("https://*.vercel.app");
+
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);

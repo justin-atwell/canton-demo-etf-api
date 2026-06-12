@@ -59,7 +59,12 @@ public class RebalanceService {
     }
 
     public List<RebalanceProposalResponse> getProposals(String partyId, String ticker) {
-        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+        var events = ledgerCommandService.getActiveContracts(
+                partyId,
+                buildEventFormat(partyId),
+                List.of(RebalanceProposal.TEMPLATE_ID)
+        );
+        return events
                 .stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))
                 .map(RebalanceProposal.Contract::fromCreatedEvent)
@@ -134,7 +139,13 @@ public class RebalanceService {
     // -------------------------------------------------------------------------
 
     private Optional<ETFDefinition.Contract> findEtfContract(String partyId, String ticker) {
-        return ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId))
+        var events = ledgerCommandService.getActiveContracts(
+                partyId,
+                buildEventFormat(partyId),
+                List.of(RebalanceProposal.TEMPLATE_ID)
+        );
+
+        return events
                 .stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("ETFDefinition"))
                 .map(ETFDefinition.Contract::fromCreatedEvent)
@@ -148,7 +159,11 @@ public class RebalanceService {
     }
 
     private Optional<CreatedEvent> findProposalEvent(String partyId, String ticker, String proposalId) {
-        var events = ledgerCommandService.getActiveContracts(partyId, buildEventFormat(partyId));
+        var events = ledgerCommandService.getActiveContracts(
+                partyId,
+                buildEventFormat(partyId),
+                List.of(RebalanceProposal.TEMPLATE_ID)
+        );
 
         long count = events.stream()
                 .filter(e -> e.getTemplateId().getEntityName().equals("RebalanceProposal"))

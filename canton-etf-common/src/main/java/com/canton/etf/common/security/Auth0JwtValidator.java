@@ -54,7 +54,7 @@ public class Auth0JwtValidator {
             // In dev mode, return the party from the Authorization header value directly
             // if no canton_party_id claim exists
             String partyId = jwt.getClaim("canton_party_id").asString();
-            return partyId != null ? partyId : "FundManager::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
+            return partyId != null ? partyId : "FundManager::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
         }
         return jwt.getClaim("canton_party_id").asString();
     }
@@ -65,12 +65,12 @@ public class Auth0JwtValidator {
 
     public String getDevPartyId(String role) {
         return switch (role) {
-            case "ComplianceOfficer" -> "ComplianceOfficer::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
-            case "Custodian"         -> "Custodian::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
-            case "Auditor"           -> "Auditor::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
-            case "MarketMaker"       -> "MarketMaker::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
-            case "Operator"          -> "Operator::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
-            default                  -> "FundManager::1220fea823c23ecfb9254d5d0ac52656737d5351172d9819033515593aacbd60d17c";
+            case "ComplianceOfficer" -> "ComplianceOfficer::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
+            case "Custodian"         -> "Custodian::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
+            case "Auditor"           -> "Auditor::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
+            case "MarketMaker"       -> "MarketMaker::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
+            case "operator"          -> "operator::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
+            default                  -> "FundManager::122070380ee60609917e12e3ac0703fbc3ea5eb62b2e34ce6b874cb6372a34a52362";
         };
     }
 }
