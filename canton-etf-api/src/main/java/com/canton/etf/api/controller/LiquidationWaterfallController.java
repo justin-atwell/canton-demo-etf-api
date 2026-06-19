@@ -57,4 +57,11 @@ public class LiquidationWaterfallController {
         String partyId = partyResolver.resolveParty(authHeader);
         return ResponseEntity.ok(liquidationWaterfallService.getAuditEvents(partyId, id));
     }
+
+    @GetMapping
+    public ResponseEntity<?> getWaterfalls(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(liquidationWaterfallService.getWaterfalls(partyId));
+    }
 }

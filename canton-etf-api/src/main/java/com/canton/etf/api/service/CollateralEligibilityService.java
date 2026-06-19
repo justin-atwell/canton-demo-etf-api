@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
@@ -107,6 +108,13 @@ public class CollateralEligibilityService {
         return getActiveSchedules(partyId).stream()
                 .filter(e -> e.getContractId().equals(contractId))
                 .findFirst();
+    }
+
+    public List<CollateralEligibilityDto> getSchedules(String partyId) {
+        return getActiveSchedules(partyId).stream()
+                .map(CollateralEligibility.Contract::fromCreatedEvent)
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     private List<CreatedEvent> getActiveSchedules(String partyId) {

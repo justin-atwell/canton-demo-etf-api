@@ -36,6 +36,13 @@ public class CollateralPoolController {
         return ResponseEntity.ok(collateralPoolService.getPool(partyId, poolId));
     }
 
+    @GetMapping
+    public ResponseEntity<?> getPools(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(collateralPoolService.getPools(partyId));
+    }
+
     @PostMapping("/{poolId}/positions")
     public ResponseEntity<?> addPosition(
             @RequestHeader("Authorization") String authHeader,

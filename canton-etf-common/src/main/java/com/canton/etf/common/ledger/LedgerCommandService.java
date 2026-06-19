@@ -35,6 +35,31 @@ public class LedgerCommandService {
     }
 
     public String submitAndWait(
+            List<String> actAs,
+            List<String> readAs,
+            String applicationId,
+            List<Command> commands) {
+
+        String commandId = UUID.randomUUID().toString();
+
+        var submission = CommandsSubmission.create(
+                        applicationId,
+                        commandId,
+                        java.util.Optional.empty(),
+                        commands)
+                .withActAs(actAs)
+                .withReadAs(readAs);
+
+        commandService.submitAndWait(
+                com.daml.ledger.api.v2.CommandServiceOuterClass.SubmitAndWaitRequest
+                        .newBuilder()
+                        .setCommands(submission.toProto())
+                        .build());
+
+        return commandId;
+    }
+
+    public String submitAndWait(
             String partyId,
             String applicationId,
             List<Command> commands) {
@@ -57,6 +82,35 @@ public class LedgerCommandService {
                         .build());
 
         log.info("submitAndWait completed successfully for commandId={}", commandId);
+
+        return commandId;
+    }
+
+    public String submitAndWait(
+            List<String> partyIds,
+            String applicationId,
+            List<Command> commands) {
+
+        String commandId = UUID.randomUUID().toString();
+
+        log.info("Submitting {} commands as parties {} commandId {}",
+                commands.size(), partyIds, commandId);
+
+        var submission = CommandsSubmission.create(
+                        applicationId,
+                        commandId,
+                        java.util.Optional.empty(),
+                        commands)
+                .withActAs(partyIds);
+
+        log.info("multi-party submission actAs: {}", submission.getActAs());
+        commandService.submitAndWait(
+                com.daml.ledger.api.v2.CommandServiceOuterClass.SubmitAndWaitRequest
+                        .newBuilder()
+                        .setCommands(submission.toProto())
+                        .build());
+
+        log.info("submitAndWait multi party submit completed successfully for commandId={}", commandId);
 
         return commandId;
     }
@@ -85,6 +139,7 @@ public class LedgerCommandService {
     public List<CreatedEvent> getActiveContracts(String partyId, EventFormat eventFormat) {
         var request = new GetActiveContractsRequest(eventFormat, getLedgerEnd());
         var results = new ArrayList<CreatedEvent>();
+
         stateService.getActiveContracts(request.toProto()).forEachRemaining(response -> {
             if (response.hasActiveContract()) {
                 results.add(CreatedEvent.fromProto(

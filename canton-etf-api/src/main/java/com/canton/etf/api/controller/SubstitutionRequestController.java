@@ -68,6 +68,13 @@ public class SubstitutionRequestController {
         return ResponseEntity.ok(substitutionRequestService.confirmTransfer(partyId, id));
     }
 
+    @GetMapping
+    public ResponseEntity<?> getRequests(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(substitutionRequestService.getRequests(partyId));
+    }
+
     // Custodian rejects
     @PostMapping("/{id}/custodian-reject")
     public ResponseEntity<?> rejectByCustodian(

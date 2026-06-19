@@ -36,6 +36,13 @@ public class CollateralEligibilityController {
         return ResponseEntity.ok(eligibilityService.getSchedule(partyId, scheduleId));
     }
 
+    @GetMapping
+    public ResponseEntity<?> getSchedules(
+            @RequestHeader("Authorization") String authHeader) {
+        String partyId = partyResolver.resolveParty(authHeader);
+        return ResponseEntity.ok(eligibilityService.getSchedules(partyId));
+    }
+
     @PostMapping("/{scheduleId}/check")
     public ResponseEntity<?> checkEligibility(
             @RequestHeader("Authorization") String authHeader,

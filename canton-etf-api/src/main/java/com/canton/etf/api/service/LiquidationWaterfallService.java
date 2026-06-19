@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
@@ -93,6 +94,13 @@ public class LiquidationWaterfallService {
                 .filter(c -> waterfallId.equals(c.data.waterfallId))
                 .map(this::auditEventToDto)
                 .toList();
+    }
+
+    public List<LiquidationWaterfallDto> getWaterfalls(String partyId) {
+        return getActiveWaterfalls(partyId).stream()
+                .map(LiquidationWaterfall.Contract::fromCreatedEvent)
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     // --- Internal helpers ---

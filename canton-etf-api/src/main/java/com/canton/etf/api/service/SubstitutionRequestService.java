@@ -3,6 +3,7 @@ package com.canton.etf.api.service;
 import com.canton.etf.api.dto.SubstitutionRequestDto;
 import com.canton.etf.api.dto.HaircutRateDto;
 import com.canton.etf.common.ledger.LedgerCommandService;
+import com.canton.etf.common.security.Auth0JwtValidator;
 import com.canton.etf.model.canton.etf.primebrokerage.collateralasset.CollateralPosition;
 import com.canton.etf.model.canton.etf.primebrokerage.collateralasset.HaircutRate;
 import com.canton.etf.model.canton.etf.primebrokerage.collateralpool.CollateralPool;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
@@ -37,9 +39,11 @@ public class SubstitutionRequestService {
     private static final String APP_ID = "canton-etf-api";
 
     private final LedgerCommandService ledgerCommandService;
+    private final Auth0JwtValidator jwtValidator;
 
-    public SubstitutionRequestService(LedgerCommandService ledgerCommandService) {
+    public SubstitutionRequestService(LedgerCommandService ledgerCommandService, Auth0JwtValidator jwtValidator) {
         this.ledgerCommandService = ledgerCommandService;
+        this.jwtValidator = jwtValidator;
     }
 
     public SubstitutionRequestDto createRequest(String partyId, SubstitutionRequestDto request) {
@@ -75,29 +79,56 @@ public class SubstitutionRequestService {
     }
 
     public SubstitutionRequestDto approveByCustodian(String partyId, String contractId, String comment) {
+        CreatedEvent event = findEventByContractId(partyId, contractId)
+                .orElseThrow(() -> new RuntimeException("SubstitutionRequest not found: " + contractId));
+        SubstitutionRequest.Contract contract = SubstitutionRequest.Contract.fromCreatedEvent(event);
+        String requestId = contract.data.requestId;
+
         var command = new SubstitutionRequest.ContractId(contractId)
                 .exerciseApproveByCustodian(new ApproveByCustodian(comment))
                 .commands().getFirst();
 
-        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
+        ledgerCommandService.submitAndWait(
+                List.of(partyId),
+                List.of(contract.data.hedgeFund),
+                APP_ID,
+                List.of(command)
+        );
         log.info("SubstitutionRequest.ApproveByCustodian exercised: contractId={}", contractId);
 
-        return getRequest(partyId, contractId);
+        // Re-fetch by requestId since contractId changed after consuming choice
+        return getRequestByRequestId(partyId, requestId);
+    }
+
+    public List<SubstitutionRequestDto> getRequests(String partyId) {
+        return getActiveRequests(partyId).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("SubstitutionRequest"))
+                .map(SubstitutionRequest.Contract::fromCreatedEvent)
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     public SubstitutionRequestDto rejectByBroker(String partyId, String contractId, String reason) {
+        CreatedEvent event = findEventByContractId(partyId, contractId)
+                .orElseThrow(() -> new RuntimeException("SubstitutionRequest not found: " + contractId));
+        SubstitutionRequest.Contract contract = SubstitutionRequest.Contract.fromCreatedEvent(event);
+
         var command = new SubstitutionRequest.ContractId(contractId)
                 .exerciseRejectByBroker(new RejectByBroker(reason))
                 .commands().getFirst();
 
-        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
+        ledgerCommandService.submitAndWait(
+                List.of(partyId),
+                List.of(contract.data.hedgeFund),
+                APP_ID,
+                List.of(command)
+        );
         log.info("SubstitutionRequest.RejectByBroker exercised: contractId={}", contractId);
 
         return getRequest(partyId, contractId);
     }
 
     public SubstitutionRequestDto confirmTransfer(String partyId, String contractId) {
-        // Build the incoming position from what's already on the contract
         CreatedEvent event = findEventByContractId(partyId, contractId)
                 .orElseThrow(() -> new RuntimeException("SubstitutionRequest not found: " + contractId));
         SubstitutionRequest.Contract contract = SubstitutionRequest.Contract.fromCreatedEvent(event);
@@ -105,8 +136,8 @@ public class SubstitutionRequestService {
         CollateralPosition incomingPosition = new CollateralPosition(
                 contract.data.incomingAsset,
                 contract.data.incomingHaircut,
-                contract.data.outgoingPosId,    // reuse positionId slot
-                contract.data.hedgeFund,         // postingParty
+                contract.data.outgoingPosId,
+                contract.data.hedgeFund,
                 Instant.now()
         );
 
@@ -114,18 +145,32 @@ public class SubstitutionRequestService {
                 .exerciseConfirmTransfer(new ConfirmTransfer(incomingPosition))
                 .commands().getFirst();
 
-        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
+        ledgerCommandService.submitAndWait(
+                List.of(partyId),
+                List.of(contract.data.hedgeFund),
+                APP_ID,
+                List.of(command)
+        );
         log.info("SubstitutionRequest.ConfirmTransfer exercised: contractId={}", contractId);
 
         return getRequest(partyId, contractId);
     }
 
     public SubstitutionRequestDto rejectByCustodian(String partyId, String contractId, String reason) {
+        CreatedEvent event = findEventByContractId(partyId, contractId)
+                .orElseThrow(() -> new RuntimeException("SubstitutionRequest not found: " + contractId));
+        SubstitutionRequest.Contract contract = SubstitutionRequest.Contract.fromCreatedEvent(event);
+
         var command = new SubstitutionRequest.ContractId(contractId)
                 .exerciseRejectByCustodian(new RejectByCustodian(reason))
                 .commands().getFirst();
 
-        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
+        ledgerCommandService.submitAndWait(
+                List.of(partyId),
+                List.of(contract.data.hedgeFund),
+                APP_ID,
+                List.of(command)
+        );
         log.info("SubstitutionRequest.RejectByCustodian exercised: contractId={}", contractId);
 
         return getRequest(partyId, contractId);
@@ -135,6 +180,7 @@ public class SubstitutionRequestService {
 
     private SubstitutionRequestDto getRequestByRequestId(String partyId, String requestId) {
         return getActiveRequests(partyId).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("SubstitutionRequest"))
                 .map(SubstitutionRequest.Contract::fromCreatedEvent)
                 .filter(c -> c.data.requestId.equals(requestId))
                 .findFirst()
@@ -143,7 +189,11 @@ public class SubstitutionRequestService {
     }
 
     private Optional<CreatedEvent> findEventByContractId(String partyId, String contractId) {
-        return getActiveRequests(partyId).stream()
+        List<CreatedEvent> events = getActiveRequests(partyId);
+        log.info("findEventByContractId: looking for={} found={} events", contractId, events.size());
+        events.forEach(e -> log.info("  event contractId={} templateId={}", e.getContractId(), e.getTemplateId().getEntityName()));
+        return events.stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("SubstitutionRequest"))
                 .filter(e -> e.getContractId().equals(contractId))
                 .findFirst();
     }
@@ -156,14 +206,15 @@ public class SubstitutionRequestService {
     }
 
     private EventFormat buildEventFormat(String partyId) {
-        return new EventFormat(
-                Map.of(partyId, new CumulativeFilter(
-                        Map.of(), Map.of(),
-                        Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
-                )),
-                Optional.empty(),
-                true
+        var filter = new CumulativeFilter(
+                Map.of(), Map.of(),
+                Optional.of(Filter.Wildcard.HIDE_CREATED_EVENT_BLOB)
         );
+        Map<String, Filter> filters = new java.util.HashMap<>();
+        for (String role : List.of("HedgeFund", "PrimeBroker", "Custodian", "RiskManager")) {
+            filters.put(jwtValidator.getDevPartyId(role), filter);
+        }
+        return new EventFormat(filters, Optional.empty(), true);
     }
 
     // --- Mapping ---
@@ -171,7 +222,7 @@ public class SubstitutionRequestService {
     private SubstitutionRequestDto toDto(SubstitutionRequest.Contract contract) {
         String rejectionReason = contract.data.status instanceof Rejected r ? r.rejectionReason : null;
         return new SubstitutionRequestDto(
-                contract.id.contractId,
+                contract.id.contractId,              // ← must be contract.id.getValue()
                 contract.data.hedgeFund,
                 contract.data.primeBroker,
                 contract.data.custodian,
@@ -181,7 +232,7 @@ public class SubstitutionRequestService {
                 AssetTypeMappingUtil.toDto(contract.data.outgoingAsset),
                 AssetTypeMappingUtil.toDto(contract.data.incomingAsset),
                 new HaircutRateDto(contract.data.incomingHaircut.rate.doubleValue()),
-                contract.data.poolCid.toString(),
+                contract.data.poolCid.contractId,   // ← .getValue() not .toString()
                 mapStatus(contract.data.status),
                 rejectionReason,
                 contract.data.createdAt != null ? contract.data.createdAt.toString() : null,

@@ -47,7 +47,14 @@ public class CollateralPoolService {
                 Instant.now()
         ).create().commands().getFirst();
 
-        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
+        log.info("createPool actAs parties: {}", List.of(request.hedgeFund(), request.custodian()));
+
+        ledgerCommandService.submitAndWait(
+                List.of(request.hedgeFund(), request.custodian()),
+                APP_ID,
+                List.of(command)
+        );
+
         log.info("CollateralPool created: poolId={}", poolId);
 
         return getPoolByPoolId(partyId, poolId);
@@ -60,6 +67,11 @@ public class CollateralPoolService {
     }
 
     public CollateralPoolDto addPosition(String partyId, String contractId, CollateralPositionDto position) {
+        // Get the poolId before exercising — we'll need it to re-fetch after
+        CreatedEvent event = findEventByContractId(partyId, contractId)
+                .orElseThrow(() -> new RuntimeException("CollateralPool not found: " + contractId));
+        String poolId = CollateralPool.Contract.fromCreatedEvent(event).data.poolId;
+
         var command = new CollateralPool.ContractId(contractId)
                 .exerciseAddPosition(toModel(position))
                 .commands().getFirst();
@@ -67,9 +79,9 @@ public class CollateralPoolService {
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
         log.info("CollateralPool.AddPosition exercised: contractId={}", contractId);
 
-        return getPool(partyId, contractId);
+        // Re-fetch by poolId since contractId changed after the consuming choice
+        return getPoolByPoolId(partyId, poolId);
     }
-
     public CollateralPoolDto removePosition(String partyId, String contractId, String positionId) {
         var command = new CollateralPool.ContractId(contractId)
                 .exerciseRemovePosition(positionId)
@@ -123,6 +135,13 @@ public class CollateralPoolService {
                 partyId,
                 buildEventFormat(partyId)
         );
+    }
+
+    public List<CollateralPoolDto> getPools(String partyId) {
+        return getActivePools(partyId).stream()
+                .map(CollateralPool.Contract::fromCreatedEvent)
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     private EventFormat buildEventFormat(String partyId) {

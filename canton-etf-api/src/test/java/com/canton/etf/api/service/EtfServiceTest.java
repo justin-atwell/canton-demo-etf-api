@@ -9,10 +9,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
@@ -32,9 +31,6 @@ public class EtfServiceTest {
                 "Compliance::abc123",
                 "Auditor::abc123");
 
-        when(ledgerCommandService.submitAndWait(any(), any(), any()))
-                .thenReturn("cmd-123");
-
         var result = testObject.createEtf("FundManager::abc123", request);
 
         assertEquals("SPY", result);
@@ -48,10 +44,9 @@ public class EtfServiceTest {
                 "Compliance::abc123",
                 "Auditor::abc123");
 
-        when(ledgerCommandService.submitAndWait(any(), any(), any()))
-                .thenReturn("cmd-123");
 
         var result = testObject.createEtf("FundManager::abc123", request);
+
         verify(ledgerCommandService).submitAndWait(eq("FundManager::abc123"), any(), any());
     }
 
@@ -63,7 +58,7 @@ public class EtfServiceTest {
                 "Compliance::abc123",
                 "Auditor::abc123");
 
-        when(ledgerCommandService.submitAndWait(any(), any(), any())).thenThrow(new RuntimeException());
+        when(ledgerCommandService.submitAndWait(any(), any(), any(), any())).thenThrow(new RuntimeException());
 
         assertThrows(RuntimeException.class, () -> testObject.createEtf("FundManager::abc123", request));
     }

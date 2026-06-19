@@ -69,7 +69,7 @@ class RebalanceServiceTest {
         assertThrows(RuntimeException.class,
                 () -> rebalanceService.propose(FUND_MANAGER, TICKER, VALID_REQUEST));
 
-        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
+        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any(), any());
     }
 
     @Test
@@ -91,7 +91,7 @@ class RebalanceServiceTest {
         assertThrows(RuntimeException.class,
                 () -> rebalanceService.approve(COMPLIANCE, TICKER, PROPOSAL_ID));
 
-        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
+        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any(), any());
     }
 
     @Test
@@ -113,7 +113,7 @@ class RebalanceServiceTest {
         assertThrows(RuntimeException.class,
                 () -> rebalanceService.reject(COMPLIANCE, TICKER, PROPOSAL_ID));
 
-        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
+        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any(), any());
     }
 
     @Test
@@ -135,6 +135,6 @@ class RebalanceServiceTest {
         assertThrows(RuntimeException.class,
                 () -> rebalanceService.execute(FUND_MANAGER, TICKER, PROPOSAL_ID));
 
-        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any());
+        verify(ledgerCommandService, never()).submitAndWait(any(), any(), any(), any());
     }
 }
