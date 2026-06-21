@@ -119,8 +119,11 @@ public class CollateralEligibilityService {
 
     private List<CreatedEvent> getActiveSchedules(String partyId) {
         return ledgerCommandService.getActiveContracts(
-                partyId,
-                buildEventFormat(partyId));
+                        partyId,
+                        buildEventFormat(partyId)
+                ).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("CollateralEligibility"))
+                .collect(Collectors.toList());
     }
 
     private EventFormat buildEventFormat(String partyId) {

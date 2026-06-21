@@ -132,6 +132,7 @@ public class SubstitutionRequestService {
         CreatedEvent event = findEventByContractId(partyId, contractId)
                 .orElseThrow(() -> new RuntimeException("SubstitutionRequest not found: " + contractId));
         SubstitutionRequest.Contract contract = SubstitutionRequest.Contract.fromCreatedEvent(event);
+        String requestId = contract.data.requestId;
 
         CollateralPosition incomingPosition = new CollateralPosition(
                 contract.data.incomingAsset,
@@ -153,7 +154,8 @@ public class SubstitutionRequestService {
         );
         log.info("SubstitutionRequest.ConfirmTransfer exercised: contractId={}", contractId);
 
-        return getRequest(partyId, contractId);
+        // Re-f   etch by requestId since contractId changed after consuming choice
+        return getRequestByRequestId(partyId, requestId);
     }
 
     public SubstitutionRequestDto rejectByCustodian(String partyId, String contractId, String reason) {

@@ -132,9 +132,11 @@ public class CollateralPoolService {
 
     private List<CreatedEvent> getActivePools(String partyId) {
         return ledgerCommandService.getActiveContracts(
-                partyId,
-                buildEventFormat(partyId)
-        );
+                        partyId,
+                        buildEventFormat(partyId)
+                ).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("CollateralPool"))
+                .collect(Collectors.toList());
     }
 
     public List<CollateralPoolDto> getPools(String partyId) {

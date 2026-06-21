@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static com.canton.etf.common.ledger.LedgerCommandService.log;
 
@@ -139,9 +140,11 @@ public class MarginCallV2Service {
 
     private List<CreatedEvent> getActiveCalls(String partyId) {
         return ledgerCommandService.getActiveContracts(
-                partyId,
-                buildEventFormat(partyId)
-        );
+                        partyId,
+                        buildEventFormat(partyId)
+                ).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("MarginCallV2"))
+                .collect(Collectors.toList());
     }
 
     private EventFormat buildEventFormat(String partyId) {

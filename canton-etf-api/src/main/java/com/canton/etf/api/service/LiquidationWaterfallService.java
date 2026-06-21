@@ -90,6 +90,7 @@ public class LiquidationWaterfallService {
                         partyId,
                         buildEventFormat(partyId)
                 ).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("LiquidationAuditEvent"))
                 .map(LiquidationAuditEvent.Contract::fromCreatedEvent)
                 .filter(c -> waterfallId.equals(c.data.waterfallId))
                 .map(this::auditEventToDto)
@@ -122,9 +123,11 @@ public class LiquidationWaterfallService {
 
     private List<CreatedEvent> getActiveWaterfalls(String partyId) {
         return ledgerCommandService.getActiveContracts(
-                partyId,
-                buildEventFormat(partyId)
-        );
+                        partyId,
+                        buildEventFormat(partyId)
+                ).stream()
+                .filter(e -> e.getTemplateId().getEntityName().equals("LiquidationWaterfall"))
+                .collect(Collectors.toList());
     }
 
     private EventFormat buildEventFormat(String partyId) {

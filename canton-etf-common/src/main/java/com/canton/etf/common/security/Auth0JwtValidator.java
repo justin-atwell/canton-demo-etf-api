@@ -65,15 +65,15 @@ public class Auth0JwtValidator {
 
     public String getDevPartyId(String role) {
         return switch (role) {
-            case "ComplianceOfficer" -> "ComplianceOfficer::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "Custodian"         -> "Custodian::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "Auditor"           -> "Auditor::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "MarketMaker"       -> "MarketMaker::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "operator"          -> "operator::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "HedgeFund"         -> "HedgeFund::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "PrimeBroker"       -> "PrimeBroker::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            case "RiskManager"       -> "RiskManager::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
-            default                  -> "FundManager::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
+            case "ComplianceOfficer" -> "ComplianceOfficer::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "Custodian"         -> "Custodian::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "Auditor"           -> "Auditor::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "MarketMaker"       -> "MarketMaker::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "operator"          -> "operator::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "HedgeFund"         -> "HedgeFund::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "PrimeBroker"       -> "PrimeBroker::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "RiskManager"       -> "RiskManager::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            default                  -> "FundManager::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
         };
     }
 }
