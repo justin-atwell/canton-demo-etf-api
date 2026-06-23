@@ -21,13 +21,18 @@ Every REST call that mutates state submits a Daml ledger command via gRPC. Every
 queries the Active Contract Set filtered by party identity. No middleware. No mock
 transactions. Real ledger state.
 
+The platform now includes a full **Prime Brokerage** module — collateral pools,
+margin calls, and an atomic liquidation waterfall — modeling the multi-party
+authorization patterns that arise when a PrimeBroker, HedgeFund, Custodian, and
+RiskManager all hold different rights over the same underlying collateral.
+
 ---
 
 ## Architecture
 
 canton-demo-etf-ui/      — React + TypeScript frontend
 canton-demo-etf-api/     ← You are here
-canton-demo-etf-daml/    — 16 Daml contracts
+canton-demo-etf-daml/    — Daml contracts
 canton-demo-etf-infra/   — Terraform + Helm + GKE Autopilot
 
 ### Module Structure
@@ -43,6 +48,11 @@ RebalanceController    — Multi-party rebalance workflow
 CollateralController   — Collateral account + lock management
 NAVController          — NAV history
 AuditController        — AccessEvent feed
+CollateralPoolController       — Prime brokerage collateral pools
+CollateralEligibilityController — Collateral eligibility rules
+SubstitutionRequestController  — Three-party collateral substitution
+MarginCallV2Controller          — Margin call lifecycle
+LiquidationWaterfallController  — Priority-ordered liquidation
 canton-etf-iam/        — LDAP → Canton IAM bridge (port 8081)
 LdapSyncService        — Syncs LDAP users to DirectoryEntry contracts
 RoleMembershipService  — Manages RoleMembership as ledger objects
@@ -55,24 +65,47 @@ NbboOracleService      — Posts NBBOQuote contracts from live market data
 
 ### The Core Pattern
 
-All ledger interaction flows through two methods in `LedgerCommandService`:
+All ledger interaction flows through `LedgerCommandService`:
 
-**Writes — `submitAndWait`**
+**Writes — single-party `submitAndWait`**
 ```java
 public String submitAndWait(String partyId, String applicationId, List<Command> commands)
 ```
-Submits a Daml command to the ledger and blocks until the transaction is committed.
-Returns the `commandId` for correlation. Every contract creation and choice exercise
-goes through this method.
+Submits a Daml command authorized by a single party.
+
+**Writes — multi-party `submitAndWait`**
+```java
+public String submitAndWait(List<String> partyIds, String applicationId, List<Command> commands)
+public String submitAndWait(List<String> actAs, List<String> readAs, String applicationId, List<Command> commands)
+```
+Two distinct multi-party patterns, used for two distinct problems:
+
+- **`actAs`-only** — when a choice's authorization requires more than one signatory
+  (e.g. creating a `CollateralPool`, which has signatories `hedgeFund, custodian`),
+  or when a choice's `do` block `fetch`es, `archive`s, or `create`s a *different*
+  contract whose full signatory set must be represented among the transaction's
+  authorizers — not just visible to it.
+- **`actAs` + `readAs`** — when a party needs visibility into a contract it is not
+  itself authorizing anything on (e.g. an observer who needs to look up a related
+  contract's data without being a required signer of the action).
+
+These are not interchangeable. A `fetch`/`archive`/`create` inside a Daml choice
+body requires its target's *stakeholders* to be among the *authorizers* of that
+specific node — `readAs` alone grants visibility but does not satisfy this
+authorization check. This distinction cost real debugging time during Prime
+Brokerage development (see `LiquidationWaterfall` below) and is documented here
+so it isn't rediscovered the hard way twice.
 
 **Reads — `getActiveContracts`**
 ```java
 public List<CreatedEvent> getActiveContracts(String partyId, EventFormat eventFormat)
 ```
-Queries the Active Contract Set via `StateServiceGrpc`. The `EventFormat` encodes
-both the party filter (Canton's privacy enforcement) and the template filter
-(which contract type to return). Results are streamed from the ledger and
-accumulated into typed `CreatedEvent` objects via the Daml Java bindings.
+Queries the Active Contract Set via `StateServiceGrpc`, filtered by party identity
+(Canton's privacy enforcement) and template. A party only sees contracts where it
+is a signatory or observer — this is enforced at the ledger level, not the API
+level, and several services in this codebase learned that the hard way (e.g. a
+PrimeBroker calling a `CollateralPool` endpoint will reliably get "not found,"
+not because the contract doesn't exist, but because PrimeBroker has no stake in it).
 
 ### Why This Is Non-Trivial
 
@@ -114,21 +147,71 @@ the compiled SDK classes directly.
 **Market Data**
 - `NBBOQuote` — National Best Bid/Offer posted by MarketMaker via QuickFIX/J.
 
+**Prime Brokerage Layer**
+- `CollateralPool` — Source of truth for posted collateral. Signatories: `hedgeFund,
+  custodian`. Observer: `riskManager`. Revaluation (`RevaluePool`) is
+  custodian-controlled; position management (`AddPosition`, `RemovePosition`) is
+  hedge-fund-controlled.
+- `CollateralEligibility` — Eligibility rules and haircut schedule for a given
+  asset class.
+- `SubstitutionRequest` — Three-party collateral substitution workflow
+  (`PENDING → APPROVED_BY_BROKER → COMPLETED`). PrimeBroker approval requires
+  `readAs` visibility into a HedgeFund-signed contract.
+- `MarginCallV2` — Margin call lifecycle with a response deadline and automatic
+  default. Sole signatory: `primeBroker`. `RespondToCall` (hedge-fund-controlled),
+  `SatisfyCall`, `DeclareDefault`, and `UpdateCoverage` (all prime-broker-controlled)
+  drive the state machine `Issued → ResponseReceived → Satisfied | Defaulted`.
+- `LiquidationWaterfall` — Priority-ordered liquidation of a `CollateralPool`
+  against a defaulted `MarginCallV2`. Signatories on `ExecuteWaterfall`:
+  `primeBroker, hedgeFund, custodian` — the latter two are required not because
+  they control the choice's business logic, but because the choice body fetches,
+  archives, and re-creates the underlying `CollateralPool`, whose own signatories
+  (`hedgeFund, custodian`) must be authorizers of any transaction that touches it.
+  Liquidates by fixed priority (MMF → Treasury → BTC) until the shortfall is
+  covered or collateral is exhausted; produces one `LiquidationAuditEvent` per
+  position liquidated.
+- `LiquidationAuditEvent` — Immutable, append-only audit record of a single
+  liquidation step. Signatory: `primeBroker`. Observers: `hedgeFund, riskManager,
+  custodian`.
+
 ---
 
 ## Multi-Party Submit
 
-Some Daml choices require multiple signatories. For example `ETFDefinition.Suspend`
-requires both `fundManager` and `compliance` to authorize. The SDK 3.4.x pattern:
+Some Daml choices require multiple signatories, and some require authorizers
+beyond the choice's own controller because of what happens *inside* the choice
+body. Two examples from this codebase:
+
+**Direct multi-signatory creation** — `CollateralPool` has signatories
+`hedgeFund, custodian`. Creating one requires both:
 
 ```java
-var submission = CommandsSubmission.create(applicationId, commandId, Optional.empty(), commands)
-    .withActAs(fundManagerPartyId)
-    .withActAs(compliancePartyId);
+ledgerCommandService.submitAndWait(
+    List.of(hedgeFundPartyId, custodianPartyId),
+    applicationId,
+    commands
+);
 ```
 
-This is enforced at the ledger layer — not just a UI convention. If either party's
-signature is missing the transaction is rejected.
+**Indirect authorization via a nested fetch/archive/create** — `LiquidationWaterfall.
+ExecuteWaterfall` is conceptually a PrimeBroker action (they're the one liquidating
+a defaulted hedge fund's collateral), but its `do` block `fetch`es, `archive`s, and
+`create`s a `CollateralPool`. Daml requires every stakeholder of a contract touched
+this way to be an authorizer of the action — so the choice's controller list is
+`primeBroker, hedgeFund, custodian`, and the Java submission must include all three
+in `actAs`:
+
+```java
+ledgerCommandService.submitAndWait(
+    List.of(primeBrokerPartyId, hedgeFundPartyId, custodianPartyId),
+    applicationId,
+    commands
+);
+```
+
+This is enforced at the ledger layer, not just a UI convention. Get the authorizer
+set wrong and the ledger rejects the transaction with a precise but easy-to-misread
+`DAML_AUTHORIZATION_ERROR` naming exactly which stakeholders were missing.
 
 ---
 
@@ -151,8 +234,14 @@ daml ledger upload-dar --host localhost --port 6865 \
   .daml/dist/canton-demo-etf-0.1.0.dar
 
 daml ledger allocate-parties --host localhost --port 6865 \
-  FundManager Custodian ComplianceOfficer Auditor MarketMaker
+  FundManager Custodian ComplianceOfficer Auditor MarketMaker \
+  HedgeFund PrimeBroker RiskManager
 ```
+
+Every fresh sandbox session generates new party fingerprints. Copy the allocated
+party ID for each role into `Auth0JwtValidator.getDevPartyId()` before starting
+the API — stale fingerprints surface as `CONTRACT_NOT_FOUND` errors that look
+unrelated to the actual cause.
 
 **Build and run**
 ```bash
@@ -179,14 +268,20 @@ JAVA_HOME=/opt/homebrew/opt/openjdk@21 gradle :canton-etf-common:test -Dintegrat
 | `LedgerCommandService` — command submission | ✅ Complete |
 | `LedgerCommandService` — ACS queries | ✅ Complete |
 | Canton sandbox connectivity | ✅ Verified |
+| `EtfService` — ledger wiring | ✅ Complete |
+| `RebalanceService` — ledger wiring | ✅ Complete |
+| `CollateralService` — ledger wiring | ✅ Complete |
+| `NAVService` — ledger wiring | ✅ Complete |
+| `CollateralPoolService` — create, position mgmt, revalue | ✅ Complete, curl-verified |
+| `CollateralEligibilityService` | ✅ Complete |
+| `SubstitutionRequestService` — three-party lifecycle | ✅ Complete, curl-verified |
+| `MarginCallV2Service` — full lifecycle incl. default | ✅ Complete, curl-verified |
+| `LiquidationWaterfallService` — atomic execution | ✅ Complete, curl-verified |
 | Unit tests | ✅ Passing |
 | Integration tests | ✅ Passing against local sandbox |
-| `EtfService` — ledger wiring | 🔜 In progress |
-| `RebalanceService` — ledger wiring | 🔜 In progress |
-| `CollateralService` — ledger wiring | 🔜 In progress |
-| `NAVService` — ledger wiring | 🔜 In progress |
-| DevNet deployment | 🔜 Pending IP whitelist |
-| GKE production deployment | 🔜 Pending |
+| Frontend wired to live prime brokerage endpoints | 🔜 In progress |
+| DevNet deployment | ✅ Live |
+| GKE production deployment | ✅ Live |
 
 ---
 
@@ -197,7 +292,7 @@ institutional capital markets (Edward Jones FIX/T+1, Bridgewater Associates)
 and enterprise DLT deployments (Hedera Hashgraph / Avery Dennison atma.io —
 one of the largest production DLT deployments globally).
 
-Part of a five-part LinkedIn series on tokenized asset infrastructure on Canton Network.
+Part of an ongoing LinkedIn series on tokenized asset infrastructure on Canton Network.
 
 Follow along: [linkedin.com/in/justin-atwell](https://linkedin.com/in/justin-atwell)
 

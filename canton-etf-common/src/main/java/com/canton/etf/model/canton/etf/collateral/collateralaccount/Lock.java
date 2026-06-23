@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Lock extends DamlRecord<Lock> {
-  public static final String _packageId = "d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18";
+  public static final String _packageId = "a2a966e2266e50a56a1ccc2c3f61201f19edb87e6611e193c1e4f4018a9c6ca2";
 
   public final BigDecimal amount;
 

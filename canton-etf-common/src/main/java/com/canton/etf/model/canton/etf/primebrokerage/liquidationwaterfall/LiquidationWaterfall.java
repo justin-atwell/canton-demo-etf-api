@@ -51,9 +51,9 @@ import java.util.Set;
 public final class LiquidationWaterfall extends Template {
   public static final Identifier TEMPLATE_ID = new Identifier("#canton-demo-etf", "Canton.ETF.PrimeBrokerage.LiquidationWaterfall", "LiquidationWaterfall");
 
-  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18", "Canton.ETF.PrimeBrokerage.LiquidationWaterfall", "LiquidationWaterfall");
+  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("a2a966e2266e50a56a1ccc2c3f61201f19edb87e6611e193c1e4f4018a9c6ca2", "Canton.ETF.PrimeBrokerage.LiquidationWaterfall", "LiquidationWaterfall");
 
-  public static final String PACKAGE_ID = "d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18";
+  public static final String PACKAGE_ID = "a2a966e2266e50a56a1ccc2c3f61201f19edb87e6611e193c1e4f4018a9c6ca2";
 
   public static final String PACKAGE_NAME = "canton-demo-etf";
 
@@ -91,6 +91,8 @@ public final class LiquidationWaterfall extends Template {
 
   public final String riskManager;
 
+  public final String custodian;
+
   public final String waterfallId;
 
   public final MarginCallV2.ContractId marginCallCid;
@@ -110,13 +112,14 @@ public final class LiquidationWaterfall extends Template {
   public final Instant updatedAt;
 
   public LiquidationWaterfall(String primeBroker, String hedgeFund, String riskManager,
-      String waterfallId, MarginCallV2.ContractId marginCallCid, CollateralPool.ContractId poolCid,
-      BigDecimal originalShortfall, BigDecimal remainingShortfall,
-      List<LiquidationStep> liquidationSteps, WaterfallStatus status, Instant initiatedAt,
-      Instant updatedAt) {
+      String custodian, String waterfallId, MarginCallV2.ContractId marginCallCid,
+      CollateralPool.ContractId poolCid, BigDecimal originalShortfall,
+      BigDecimal remainingShortfall, List<LiquidationStep> liquidationSteps, WaterfallStatus status,
+      Instant initiatedAt, Instant updatedAt) {
     this.primeBroker = primeBroker;
     this.hedgeFund = hedgeFund;
     this.riskManager = riskManager;
+    this.custodian = custodian;
     this.waterfallId = waterfallId;
     this.marginCallCid = marginCallCid;
     this.poolCid = poolCid;
@@ -168,13 +171,14 @@ public final class LiquidationWaterfall extends Template {
   }
 
   public static Update<Created<ContractId>> create(String primeBroker, String hedgeFund,
-      String riskManager, String waterfallId, MarginCallV2.ContractId marginCallCid,
-      CollateralPool.ContractId poolCid, BigDecimal originalShortfall,
-      BigDecimal remainingShortfall, List<LiquidationStep> liquidationSteps, WaterfallStatus status,
-      Instant initiatedAt, Instant updatedAt) {
-    return new LiquidationWaterfall(primeBroker, hedgeFund, riskManager, waterfallId, marginCallCid,
-        poolCid, originalShortfall, remainingShortfall, liquidationSteps, status, initiatedAt,
-        updatedAt).create();
+      String riskManager, String custodian, String waterfallId,
+      MarginCallV2.ContractId marginCallCid, CollateralPool.ContractId poolCid,
+      BigDecimal originalShortfall, BigDecimal remainingShortfall,
+      List<LiquidationStep> liquidationSteps, WaterfallStatus status, Instant initiatedAt,
+      Instant updatedAt) {
+    return new LiquidationWaterfall(primeBroker, hedgeFund, riskManager, custodian, waterfallId,
+        marginCallCid, poolCid, originalShortfall, remainingShortfall, liquidationSteps, status,
+        initiatedAt, updatedAt).create();
   }
 
   @Override
@@ -193,10 +197,11 @@ public final class LiquidationWaterfall extends Template {
   }
 
   public DamlRecord toValue() {
-    ArrayList<DamlRecord.Field> fields = new ArrayList<DamlRecord.Field>(12);
+    ArrayList<DamlRecord.Field> fields = new ArrayList<DamlRecord.Field>(13);
     fields.add(new DamlRecord.Field("primeBroker", new Party(this.primeBroker)));
     fields.add(new DamlRecord.Field("hedgeFund", new Party(this.hedgeFund)));
     fields.add(new DamlRecord.Field("riskManager", new Party(this.riskManager)));
+    fields.add(new DamlRecord.Field("custodian", new Party(this.custodian)));
     fields.add(new DamlRecord.Field("waterfallId", new Text(this.waterfallId)));
     fields.add(new DamlRecord.Field("marginCallCid", this.marginCallCid.toValue()));
     fields.add(new DamlRecord.Field("poolCid", this.poolCid.toValue()));
@@ -213,49 +218,51 @@ public final class LiquidationWaterfall extends Template {
       IllegalArgumentException {
     return value$ -> {
       Value recordValue$ = value$;
-      List<DamlRecord.Field> fields$ = PrimitiveValueDecoders.recordCheck(12,0, recordValue$);
+      List<DamlRecord.Field> fields$ = PrimitiveValueDecoders.recordCheck(13,0, recordValue$);
       String primeBroker = PrimitiveValueDecoders.fromParty.decode(fields$.get(0).getValue());
       String hedgeFund = PrimitiveValueDecoders.fromParty.decode(fields$.get(1).getValue());
       String riskManager = PrimitiveValueDecoders.fromParty.decode(fields$.get(2).getValue());
-      String waterfallId = PrimitiveValueDecoders.fromText.decode(fields$.get(3).getValue());
+      String custodian = PrimitiveValueDecoders.fromParty.decode(fields$.get(3).getValue());
+      String waterfallId = PrimitiveValueDecoders.fromText.decode(fields$.get(4).getValue());
       MarginCallV2.ContractId marginCallCid =
-          new MarginCallV2.ContractId(fields$.get(4).getValue().asContractId().orElseThrow(() -> new IllegalArgumentException("Expected marginCallCid to be of type com.daml.ledger.javaapi.data.ContractId")).getValue());
+          new MarginCallV2.ContractId(fields$.get(5).getValue().asContractId().orElseThrow(() -> new IllegalArgumentException("Expected marginCallCid to be of type com.daml.ledger.javaapi.data.ContractId")).getValue());
       CollateralPool.ContractId poolCid =
-          new CollateralPool.ContractId(fields$.get(5).getValue().asContractId().orElseThrow(() -> new IllegalArgumentException("Expected poolCid to be of type com.daml.ledger.javaapi.data.ContractId")).getValue());
+          new CollateralPool.ContractId(fields$.get(6).getValue().asContractId().orElseThrow(() -> new IllegalArgumentException("Expected poolCid to be of type com.daml.ledger.javaapi.data.ContractId")).getValue());
       BigDecimal originalShortfall = PrimitiveValueDecoders.fromNumeric
-          .decode(fields$.get(6).getValue());
-      BigDecimal remainingShortfall = PrimitiveValueDecoders.fromNumeric
           .decode(fields$.get(7).getValue());
+      BigDecimal remainingShortfall = PrimitiveValueDecoders.fromNumeric
+          .decode(fields$.get(8).getValue());
       List<LiquidationStep> liquidationSteps = PrimitiveValueDecoders.fromList(
-            LiquidationStep.valueDecoder()).decode(fields$.get(8).getValue());
-      WaterfallStatus status = WaterfallStatus.valueDecoder().decode(fields$.get(9).getValue());
-      Instant initiatedAt = PrimitiveValueDecoders.fromTimestamp.decode(fields$.get(10).getValue());
-      Instant updatedAt = PrimitiveValueDecoders.fromTimestamp.decode(fields$.get(11).getValue());
-      return new LiquidationWaterfall(primeBroker, hedgeFund, riskManager, waterfallId,
+            LiquidationStep.valueDecoder()).decode(fields$.get(9).getValue());
+      WaterfallStatus status = WaterfallStatus.valueDecoder().decode(fields$.get(10).getValue());
+      Instant initiatedAt = PrimitiveValueDecoders.fromTimestamp.decode(fields$.get(11).getValue());
+      Instant updatedAt = PrimitiveValueDecoders.fromTimestamp.decode(fields$.get(12).getValue());
+      return new LiquidationWaterfall(primeBroker, hedgeFund, riskManager, custodian, waterfallId,
           marginCallCid, poolCid, originalShortfall, remainingShortfall, liquidationSteps, status,
           initiatedAt, updatedAt);
     } ;
   }
 
   public static JsonLfDecoder<LiquidationWaterfall> jsonDecoder() {
-    return JsonLfDecoders.record(Arrays.asList("primeBroker", "hedgeFund", "riskManager", "waterfallId", "marginCallCid", "poolCid", "originalShortfall", "remainingShortfall", "liquidationSteps", "status", "initiatedAt", "updatedAt"), name -> {
+    return JsonLfDecoders.record(Arrays.asList("primeBroker", "hedgeFund", "riskManager", "custodian", "waterfallId", "marginCallCid", "poolCid", "originalShortfall", "remainingShortfall", "liquidationSteps", "status", "initiatedAt", "updatedAt"), name -> {
           switch (name) {
             case "primeBroker": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(0, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.party);
             case "hedgeFund": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(1, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.party);
             case "riskManager": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(2, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.party);
-            case "waterfallId": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(3, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.text);
-            case "marginCallCid": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(4, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.contractId(com.canton.etf.model.canton.etf.primebrokerage.margincallv2.MarginCallV2.ContractId::new));
-            case "poolCid": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(5, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.contractId(com.canton.etf.model.canton.etf.primebrokerage.collateralpool.CollateralPool.ContractId::new));
-            case "originalShortfall": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(6, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.numeric(10));
-            case "remainingShortfall": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(7, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.numeric(10));
-            case "liquidationSteps": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(8, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.list(new com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.LiquidationStep.JsonDecoder$().get()));
-            case "status": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(9, new com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.WaterfallStatus.JsonDecoder$().get());
-            case "initiatedAt": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(10, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.timestamp);
-            case "updatedAt": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(11, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.timestamp);
+            case "custodian": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(3, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.party);
+            case "waterfallId": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(4, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.text);
+            case "marginCallCid": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(5, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.contractId(com.canton.etf.model.canton.etf.primebrokerage.margincallv2.MarginCallV2.ContractId::new));
+            case "poolCid": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(6, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.contractId(com.canton.etf.model.canton.etf.primebrokerage.collateralpool.CollateralPool.ContractId::new));
+            case "originalShortfall": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(7, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.numeric(10));
+            case "remainingShortfall": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(8, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.numeric(10));
+            case "liquidationSteps": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(9, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.list(new com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.LiquidationStep.JsonDecoder$().get()));
+            case "status": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(10, new com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.WaterfallStatus.JsonDecoder$().get());
+            case "initiatedAt": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(11, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.timestamp);
+            case "updatedAt": return com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.JavaArg.at(12, com.daml.ledger.javaapi.data.codegen.json.JsonLfDecoders.timestamp);
             default: return null;
           }
         }
-        , (Object[] args) -> new LiquidationWaterfall(JsonLfDecoders.cast(args[0]), JsonLfDecoders.cast(args[1]), JsonLfDecoders.cast(args[2]), JsonLfDecoders.cast(args[3]), JsonLfDecoders.cast(args[4]), JsonLfDecoders.cast(args[5]), JsonLfDecoders.cast(args[6]), JsonLfDecoders.cast(args[7]), JsonLfDecoders.cast(args[8]), JsonLfDecoders.cast(args[9]), JsonLfDecoders.cast(args[10]), JsonLfDecoders.cast(args[11])));
+        , (Object[] args) -> new LiquidationWaterfall(JsonLfDecoders.cast(args[0]), JsonLfDecoders.cast(args[1]), JsonLfDecoders.cast(args[2]), JsonLfDecoders.cast(args[3]), JsonLfDecoders.cast(args[4]), JsonLfDecoders.cast(args[5]), JsonLfDecoders.cast(args[6]), JsonLfDecoders.cast(args[7]), JsonLfDecoders.cast(args[8]), JsonLfDecoders.cast(args[9]), JsonLfDecoders.cast(args[10]), JsonLfDecoders.cast(args[11]), JsonLfDecoders.cast(args[12])));
   }
 
   public static LiquidationWaterfall fromJson(String json) throws JsonLfDecoder.Error {
@@ -267,6 +274,7 @@ public final class LiquidationWaterfall extends Template {
         JsonLfEncoders.Field.of("primeBroker", apply(JsonLfEncoders::party, primeBroker)),
         JsonLfEncoders.Field.of("hedgeFund", apply(JsonLfEncoders::party, hedgeFund)),
         JsonLfEncoders.Field.of("riskManager", apply(JsonLfEncoders::party, riskManager)),
+        JsonLfEncoders.Field.of("custodian", apply(JsonLfEncoders::party, custodian)),
         JsonLfEncoders.Field.of("waterfallId", apply(JsonLfEncoders::text, waterfallId)),
         JsonLfEncoders.Field.of("marginCallCid", apply(JsonLfEncoders::contractId, marginCallCid)),
         JsonLfEncoders.Field.of("poolCid", apply(JsonLfEncoders::contractId, poolCid)),
@@ -297,6 +305,7 @@ public final class LiquidationWaterfall extends Template {
     return Objects.equals(this.primeBroker, other.primeBroker) &&
         Objects.equals(this.hedgeFund, other.hedgeFund) &&
         Objects.equals(this.riskManager, other.riskManager) &&
+        Objects.equals(this.custodian, other.custodian) &&
         Objects.equals(this.waterfallId, other.waterfallId) &&
         Objects.equals(this.marginCallCid, other.marginCallCid) &&
         Objects.equals(this.poolCid, other.poolCid) &&
@@ -310,17 +319,18 @@ public final class LiquidationWaterfall extends Template {
 
   @Override
   public int hashCode() {
-    return Objects.hash(this.primeBroker, this.hedgeFund, this.riskManager, this.waterfallId,
-        this.marginCallCid, this.poolCid, this.originalShortfall, this.remainingShortfall,
-        this.liquidationSteps, this.status, this.initiatedAt, this.updatedAt);
+    return Objects.hash(this.primeBroker, this.hedgeFund, this.riskManager, this.custodian,
+        this.waterfallId, this.marginCallCid, this.poolCid, this.originalShortfall,
+        this.remainingShortfall, this.liquidationSteps, this.status, this.initiatedAt,
+        this.updatedAt);
   }
 
   @Override
   public String toString() {
-    return String.format("com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.LiquidationWaterfall(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        this.primeBroker, this.hedgeFund, this.riskManager, this.waterfallId, this.marginCallCid,
-        this.poolCid, this.originalShortfall, this.remainingShortfall, this.liquidationSteps,
-        this.status, this.initiatedAt, this.updatedAt);
+    return String.format("com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.LiquidationWaterfall(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        this.primeBroker, this.hedgeFund, this.riskManager, this.custodian, this.waterfallId,
+        this.marginCallCid, this.poolCid, this.originalShortfall, this.remainingShortfall,
+        this.liquidationSteps, this.status, this.initiatedAt, this.updatedAt);
   }
 
   public static final class ContractId extends com.daml.ledger.javaapi.data.codegen.ContractId<LiquidationWaterfall> implements Exercises<ExerciseCommand> {
