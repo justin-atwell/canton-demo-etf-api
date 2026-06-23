@@ -54,7 +54,7 @@ public class Auth0JwtValidator {
             // In dev mode, return the party from the Authorization header value directly
             // if no canton_party_id claim exists
             String partyId = jwt.getClaim("canton_party_id").asString();
-            return partyId != null ? partyId : "FundManager::12204a9df91dd8b99f843f82b34a593f83afe82b6a6c66b078478b863c2cc341a0de";
+            return partyId != null ? partyId : "FundManager::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
         }
         return jwt.getClaim("canton_party_id").asString();
     }
@@ -65,15 +65,15 @@ public class Auth0JwtValidator {
 
     public String getDevPartyId(String role) {
         return switch (role) {
-            case "ComplianceOfficer" -> "ComplianceOfficer::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "Custodian"         -> "Custodian::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "Auditor"           -> "Auditor::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "MarketMaker"       -> "MarketMaker::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "operator"          -> "operator::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "HedgeFund"         -> "HedgeFund::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "PrimeBroker"       -> "PrimeBroker::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            case "RiskManager"       -> "RiskManager::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
-            default                  -> "FundManager::122054c77909ff7f1e4182de6ff982ab3d8c0d93eb98e3bb1a456ff58304ce4df02a";
+            case "ComplianceOfficer" -> "ComplianceOfficer::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "Custodian"         -> "Custodian::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "Auditor"           -> "Auditor::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "MarketMaker"       -> "MarketMaker::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "operator"          -> "operator::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "HedgeFund"         -> "HedgeFund::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "PrimeBroker"       -> "PrimeBroker::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            case "RiskManager"       -> "RiskManager::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
+            default                  -> "FundManager::1220a5676be5febe7571b8756ff143d63c135e31872f45c4946d9ecd622e4f16a1f2";
         };
     }
 }

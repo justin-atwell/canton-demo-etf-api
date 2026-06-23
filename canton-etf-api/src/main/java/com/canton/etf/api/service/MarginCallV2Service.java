@@ -72,6 +72,8 @@ public class MarginCallV2Service {
     }
 
     public MarginCallV2Dto respondToCall(String partyId, String contractId, ResponseType responseType, String comment) {
+        String callId = getCall(partyId, contractId).callId();  // capture before archiving
+
         var command = new MarginCallV2.ContractId(contractId)
                 .exerciseRespondToCall(new RespondToCall(responseType, comment))
                 .commands().getFirst();
@@ -79,10 +81,12 @@ public class MarginCallV2Service {
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
         log.info("MarginCallV2.RespondToCall exercised: contractId={}", contractId);
 
-        return getCall(partyId, contractId);
+        return getCallByCallId(partyId, callId);
     }
 
     public MarginCallV2Dto satisfyCall(String partyId, String contractId, double newCoverage) {
+        String callId = getCall(partyId, contractId).callId();
+
         var command = new MarginCallV2.ContractId(contractId)
                 .exerciseSatisfyCall(new SatisfyCall(BigDecimal.valueOf(newCoverage)))
                 .commands().getFirst();
@@ -90,10 +94,12 @@ public class MarginCallV2Service {
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
         log.info("MarginCallV2.SatisfyCall exercised: contractId={}", contractId);
 
-        return getCall(partyId, contractId);
+        return getCallByCallId(partyId, callId);
     }
 
     public MarginCallV2Dto declareDefault(String partyId, String contractId) {
+        String callId = getCall(partyId, contractId).callId();
+
         var command = new MarginCallV2.ContractId(contractId)
                 .exerciseDeclareDefault(new DeclareDefault())
                 .commands().getFirst();
@@ -101,10 +107,12 @@ public class MarginCallV2Service {
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
         log.info("MarginCallV2.DeclareDefault exercised: contractId={}", contractId);
 
-        return getCall(partyId, contractId);
+        return getCallByCallId(partyId, callId);
     }
 
     public MarginCallV2Dto updateCoverage(String partyId, String contractId, double newCoverage) {
+        String callId = getCall(partyId, contractId).callId();
+
         var command = new MarginCallV2.ContractId(contractId)
                 .exerciseUpdateCoverage(new UpdateCoverage(BigDecimal.valueOf(newCoverage)))
                 .commands().getFirst();
@@ -112,7 +120,7 @@ public class MarginCallV2Service {
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
         log.info("MarginCallV2.UpdateCoverage exercised: contractId={} newCoverage={}", contractId, newCoverage);
 
-        return getCall(partyId, contractId);
+        return getCallByCallId(partyId, callId);
     }
 
     // --- Internal helpers ---

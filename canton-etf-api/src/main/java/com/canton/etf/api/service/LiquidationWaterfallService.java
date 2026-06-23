@@ -45,12 +45,13 @@ public class LiquidationWaterfallService {
                 request.primeBroker(),
                 request.hedgeFund(),
                 request.riskManager(),
+                request.custodian(),
                 waterfallId,
                 new MarginCallV2.ContractId(request.marginCallCid()),
                 new CollateralPool.ContractId(request.poolCid()),
                 BigDecimal.valueOf(request.originalShortfall()),
-                BigDecimal.valueOf(request.originalShortfall()),  // remainingShortfall = originalShortfall on creation
-                List.of(),                                         // liquidationSteps start empty
+                BigDecimal.valueOf(request.originalShortfall()),
+                List.of(),
                 WaterfallStatus.INPROGRESS,
                 now,
                 now
@@ -62,21 +63,26 @@ public class LiquidationWaterfallService {
         return getWaterfallByWaterfallId(partyId, waterfallId);
     }
 
-    /**
-     * ExecuteWaterfall takes List<LiquidationPriority> — priorities define the liquidation order.
-     * MMF first, then Treasury, then BTC per the prime brokerage spec.
-     * Caller can pass custom priorities via request body; defaults to standard order if empty.
-     */
     public LiquidationWaterfallDto executeWaterfall(String partyId, String contractId,
                                                     List<LiquidationPriority> priorities) {
+        LiquidationWaterfallDto current = getWaterfall(partyId, contractId);
+        String waterfallId = current.waterfallId();
+        String hedgeFund = current.hedgeFund();
+        String custodian = current.custodian();  // now stored directly on the contract — no pool lookup needed
+
         var command = new LiquidationWaterfall.ContractId(contractId)
                 .exerciseExecuteWaterfall(new ExecuteWaterfall(priorities))
                 .commands().getFirst();
 
-        ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
-        log.info("LiquidationWaterfall.ExecuteWaterfall exercised: contractId={}", contractId);
+        ledgerCommandService.submitAndWait(
+                List.of(partyId, hedgeFund, custodian),
+                APP_ID,
+                List.of(command)
+        );
+        log.info("LiquidationWaterfall.ExecuteWaterfall exercised: contractId={} actAs={}",
+                contractId, List.of(partyId, hedgeFund, custodian));
 
-        return getWaterfall(partyId, contractId);
+        return getWaterfallByWaterfallId(partyId, waterfallId);
     }
 
     public LiquidationWaterfallDto getWaterfall(String partyId, String contractId) {
@@ -149,12 +155,13 @@ public class LiquidationWaterfallService {
                 contract.data.primeBroker,
                 contract.data.hedgeFund,
                 contract.data.riskManager,
+                contract.data.custodian,
                 contract.data.waterfallId,
                 contract.data.marginCallCid.toString(),
                 contract.data.poolCid.toString(),
                 contract.data.originalShortfall.doubleValue(),
                 contract.data.remainingShortfall.doubleValue(),
-                List.of(),  // audit events fetched separately via getAuditEvents
+                List.of(),
                 contract.data.status.name(),
                 contract.data.initiatedAt != null ? contract.data.initiatedAt.toString() : null,
                 contract.data.updatedAt != null ? contract.data.updatedAt.toString() : null

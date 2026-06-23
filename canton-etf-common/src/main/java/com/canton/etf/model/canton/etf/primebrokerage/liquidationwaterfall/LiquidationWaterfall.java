@@ -51,19 +51,13 @@ import java.util.Set;
 public final class LiquidationWaterfall extends Template {
   public static final Identifier TEMPLATE_ID = new Identifier("#canton-demo-etf", "Canton.ETF.PrimeBrokerage.LiquidationWaterfall", "LiquidationWaterfall");
 
-  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d", "Canton.ETF.PrimeBrokerage.LiquidationWaterfall", "LiquidationWaterfall");
+  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18", "Canton.ETF.PrimeBrokerage.LiquidationWaterfall", "LiquidationWaterfall");
 
-  public static final String PACKAGE_ID = "c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d";
+  public static final String PACKAGE_ID = "d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18";
 
   public static final String PACKAGE_NAME = "canton-demo-etf";
 
   public static final PackageVersion PACKAGE_VERSION = new PackageVersion(new int[] {0, 1, 0});
-
-  public static final Choice<LiquidationWaterfall, Archive, Unit> CHOICE_Archive = 
-      Choice.create("Archive", value$ -> value$.toValue(), value$ -> Archive.valueDecoder()
-        .decode(value$), value$ -> PrimitiveValueDecoders.fromUnit.decode(value$),
-        new Archive.JsonDecoder$().get(), JsonLfDecoders.unit, Archive::jsonEncoder,
-        JsonLfEncoders::unit);
 
   public static final Choice<LiquidationWaterfall, ExecuteWaterfall, Tuple2<ContractId, CollateralPool.ContractId>> CHOICE_ExecuteWaterfall = 
       Choice.create("ExecuteWaterfall", value$ -> value$.toValue(), value$ ->
@@ -78,12 +72,18 @@ public final class LiquidationWaterfall extends Template {
         ExecuteWaterfall::jsonEncoder,
         _x0 -> _x0.jsonEncoder(JsonLfEncoders::contractId, JsonLfEncoders::contractId));
 
+  public static final Choice<LiquidationWaterfall, Archive, Unit> CHOICE_Archive = 
+      Choice.create("Archive", value$ -> value$.toValue(), value$ -> Archive.valueDecoder()
+        .decode(value$), value$ -> PrimitiveValueDecoders.fromUnit.decode(value$),
+        new Archive.JsonDecoder$().get(), JsonLfDecoders.unit, Archive::jsonEncoder,
+        JsonLfEncoders::unit);
+
   public static final ContractCompanion.WithoutKey<Contract, ContractId, LiquidationWaterfall> COMPANION = 
       new ContractCompanion.WithoutKey<>(new ContractTypeCompanion.Package(LiquidationWaterfall.PACKAGE_ID, LiquidationWaterfall.PACKAGE_NAME, LiquidationWaterfall.PACKAGE_VERSION),
         "com.canton.etf.model.canton.etf.primebrokerage.liquidationwaterfall.LiquidationWaterfall",
         TEMPLATE_ID, ContractId::new, v -> LiquidationWaterfall.templateValueDecoder().decode(v),
-        LiquidationWaterfall::fromJson, Contract::new, List.of(CHOICE_Archive,
-        CHOICE_ExecuteWaterfall));
+        LiquidationWaterfall::fromJson, Contract::new, List.of(CHOICE_ExecuteWaterfall,
+        CHOICE_Archive));
 
   public final String primeBroker;
 
@@ -134,22 +134,6 @@ public final class LiquidationWaterfall extends Template {
   }
 
   /**
-   * @deprecated since Daml 2.3.0; use {@code createAnd().exerciseArchive} instead
-   */
-  @Deprecated
-  public Update<Exercised<Unit>> createAndExerciseArchive(Archive arg) {
-    return createAnd().exerciseArchive(arg);
-  }
-
-  /**
-   * @deprecated since Daml 2.3.0; use {@code createAnd().exerciseArchive} instead
-   */
-  @Deprecated
-  public Update<Exercised<Unit>> createAndExerciseArchive() {
-    return createAndExerciseArchive(new Archive());
-  }
-
-  /**
    * @deprecated since Daml 2.3.0; use {@code createAnd().exerciseExecuteWaterfall} instead
    */
   @Deprecated
@@ -165,6 +149,22 @@ public final class LiquidationWaterfall extends Template {
   public Update<Exercised<Tuple2<ContractId, CollateralPool.ContractId>>> createAndExerciseExecuteWaterfall(
       List<LiquidationPriority> priorities) {
     return createAndExerciseExecuteWaterfall(new ExecuteWaterfall(priorities));
+  }
+
+  /**
+   * @deprecated since Daml 2.3.0; use {@code createAnd().exerciseArchive} instead
+   */
+  @Deprecated
+  public Update<Exercised<Unit>> createAndExerciseArchive(Archive arg) {
+    return createAnd().exerciseArchive(arg);
+  }
+
+  /**
+   * @deprecated since Daml 2.3.0; use {@code createAnd().exerciseArchive} instead
+   */
+  @Deprecated
+  public Update<Exercised<Unit>> createAndExerciseArchive() {
+    return createAndExerciseArchive(new Archive());
   }
 
   public static Update<Created<ContractId>> create(String primeBroker, String hedgeFund,
@@ -362,14 +362,6 @@ public final class LiquidationWaterfall extends Template {
   }
 
   public interface Exercises<Cmd> extends com.daml.ledger.javaapi.data.codegen.Exercises.Archivable<Cmd> {
-    default Update<Exercised<Unit>> exerciseArchive(Archive arg) {
-      return makeExerciseCmd(CHOICE_Archive, arg);
-    }
-
-    default Update<Exercised<Unit>> exerciseArchive() {
-      return exerciseArchive(new Archive());
-    }
-
     default Update<Exercised<Tuple2<ContractId, CollateralPool.ContractId>>> exerciseExecuteWaterfall(
         ExecuteWaterfall arg) {
       return makeExerciseCmd(CHOICE_ExecuteWaterfall, arg);
@@ -378,6 +370,14 @@ public final class LiquidationWaterfall extends Template {
     default Update<Exercised<Tuple2<ContractId, CollateralPool.ContractId>>> exerciseExecuteWaterfall(
         List<LiquidationPriority> priorities) {
       return exerciseExecuteWaterfall(new ExecuteWaterfall(priorities));
+    }
+
+    default Update<Exercised<Unit>> exerciseArchive(Archive arg) {
+      return makeExerciseCmd(CHOICE_Archive, arg);
+    }
+
+    default Update<Exercised<Unit>> exerciseArchive() {
+      return exerciseArchive(new Archive());
     }
   }
 

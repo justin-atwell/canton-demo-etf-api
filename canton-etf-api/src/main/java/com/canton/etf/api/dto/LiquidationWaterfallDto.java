@@ -7,6 +7,7 @@ public record LiquidationWaterfallDto(
         String primeBroker,
         String hedgeFund,
         String riskManager,
+        String custodian,
         String waterfallId,
         String marginCallCid,
         String poolCid,

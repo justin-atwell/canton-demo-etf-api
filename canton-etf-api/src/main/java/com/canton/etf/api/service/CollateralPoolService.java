@@ -37,12 +37,17 @@ public class CollateralPoolService {
 
     public CollateralPoolDto createPool(String partyId, CollateralPoolDto request) {
         String poolId = UUID.randomUUID().toString();
+
+        var positions = request.positions() != null
+                ? request.positions().stream().map(this::toModel).toList()
+                : List.<CollateralPosition>of();
+
         var command = new CollateralPool(
                 request.hedgeFund(),
                 request.custodian(),
                 request.riskManager(),
                 poolId,
-                List.of(),
+                positions,
                 BigDecimal.ZERO,
                 Instant.now()
         ).create().commands().getFirst();
@@ -94,6 +99,10 @@ public class CollateralPoolService {
     }
 
     public CollateralPoolDto revaluePool(String partyId, String contractId) {
+        CreatedEvent event = findEventByContractId(partyId, contractId)
+                .orElseThrow(() -> new RuntimeException("CollateralPool not found: " + contractId));
+        String poolId = CollateralPool.Contract.fromCreatedEvent(event).data.poolId;
+
         var command = new CollateralPool.ContractId(contractId)
                 .exerciseRevaluePool(new RevaluePool(getPoolPositions(partyId, contractId)))
                 .commands().getFirst();
@@ -101,9 +110,8 @@ public class CollateralPoolService {
         ledgerCommandService.submitAndWait(partyId, APP_ID, List.of(command));
         log.info("CollateralPool.RevaluePool exercised: contractId={}", contractId);
 
-        return getPool(partyId, contractId);
+        return getPoolByPoolId(partyId, poolId);
     }
-
     // --- Internal helpers ---
 
     private CollateralPoolDto getPoolByPoolId(String partyId, String poolId) {

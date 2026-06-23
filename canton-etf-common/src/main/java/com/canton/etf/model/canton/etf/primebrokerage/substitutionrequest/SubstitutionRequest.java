@@ -50,9 +50,9 @@ import java.util.Set;
 public final class SubstitutionRequest extends Template {
   public static final Identifier TEMPLATE_ID = new Identifier("#canton-demo-etf", "Canton.ETF.PrimeBrokerage.SubstitutionRequest", "SubstitutionRequest");
 
-  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d", "Canton.ETF.PrimeBrokerage.SubstitutionRequest", "SubstitutionRequest");
+  public static final Identifier TEMPLATE_ID_WITH_PACKAGE_ID = new Identifier("d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18", "Canton.ETF.PrimeBrokerage.SubstitutionRequest", "SubstitutionRequest");
 
-  public static final String PACKAGE_ID = "c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d";
+  public static final String PACKAGE_ID = "d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18";
 
   public static final String PACKAGE_NAME = "canton-demo-etf";
 

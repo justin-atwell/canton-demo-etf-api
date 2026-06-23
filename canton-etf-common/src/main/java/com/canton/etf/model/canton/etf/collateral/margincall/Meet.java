@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Meet extends DamlRecord<Meet> {
-  public static final String _packageId = "c2e41b9e13dba8a6699eb8b7cde2c5e5c96ac00b38b18aa67373f159da67c93d";
+  public static final String _packageId = "d152e05f0163f6f98cd1bfa4dea83fe4efd885a5d3898947b1f6cd243a818b18";
 
   public Meet() {
   }
